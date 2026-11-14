@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { LAYER_STYLE } from '../lib/colors.js';
-import { numLocale, t, tf } from '../lib/i18n.js';
+import { getLang, numLocale, t, tf } from '../lib/i18n.js';
+import LiquidSwitch from './LiquidSwitch.jsx';
+import LiquidTabs from './LiquidTabs.jsx';
 
 const TABS = [
   ['layers', 'Layers'],
@@ -45,21 +47,15 @@ function Prose({ text }) {
   return <p className="prose">{text.split('**').map((part, i) => (i % 2 ? <b key={i}>{part}</b> : part))}</p>;
 }
 
-function Toggle({ label, checked, onChange, hint }) {
-  return (
-    <label className="toggle">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-      <span className="sw" />
-      <span className="tl">
-        {label}
-        {hint && <small>{hint}</small>}
-      </span>
-    </label>
-  );
-}
-
-export default function SettingsMenu({ open, onClose, data, settings, setSettings, activeLayer, setActiveLayer, onCase, onTour, geoReady }) {
+export default function SettingsMenu({ open, onClose, data, settings, setSettings, activeLayer, setActiveLayer, onCase, onTour, onAbout, geoReady }) {
   const [tab, setTab] = useState('layers');
+  const colorOptions = useMemo(
+    () => [
+      { id: 'anomaly', label: t('Selected year vs. average') },
+      { id: 'trend', label: t('20-year trend') },
+    ],
+    [open, getLang()],
+  );
   if (!open) return null;
   const { meta, layers, cases } = data;
   const set = (k) => (v) => setSettings((s) => ({ ...s, [k]: v }));
@@ -103,21 +99,25 @@ export default function SettingsMenu({ open, onClose, data, settings, setSetting
           </div>
           <p className="layer-about">{LAYER_STYLE[activeLayer]?.about}</p>
           <h5>{t('Globe colors show')}</h5>
-          <div className="seg">
-            <button className={settings.colorMode === 'anomaly' ? 'on' : ''} onClick={() => set('colorMode')('anomaly')}>
-              {t('Selected year vs. average')}
+          <LiquidTabs
+            className="seg"
+            label={t('Globe colors show')}
+            value={settings.colorMode}
+            onChange={set('colorMode')}
+            options={colorOptions}
+          />
+          <LiquidSwitch label={t('Only significant trends')} hint={t('Hide cells that do not pass the statistical test after FDR correction')} checked={settings.sigOnly} onChange={set('sigOnly')} />
+          <LiquidSwitch label={t('Land only')} checked={settings.landOnly} onChange={set('landOnly')} />
+          <LiquidSwitch label={t('Auto-rotate globe')} checked={settings.autoRotate} onChange={set('autoRotate')} />
+          <LiquidSwitch label={t('Example pins on the globe')} checked={settings.showCases} onChange={set('showCases')} />
+          <div className="settings-about">
+            <button className="tour-again" onClick={onAbout}>
+              ? {t('What is EarthTrends?')}
             </button>
-            <button className={settings.colorMode === 'trend' ? 'on' : ''} onClick={() => set('colorMode')('trend')}>
-              {t('20-year trend')}
+            <button className="tour-again" onClick={onTour}>
+              ▶ {t('Replay the guided example')}
             </button>
           </div>
-          <Toggle label={t('Only significant trends')} hint={t('Hide cells that do not pass the statistical test after FDR correction')} checked={settings.sigOnly} onChange={set('sigOnly')} />
-          <Toggle label={t('Land only')} checked={settings.landOnly} onChange={set('landOnly')} />
-          <Toggle label={t('Auto-rotate globe')} checked={settings.autoRotate} onChange={set('autoRotate')} />
-          <Toggle label={t('Example pins on the globe')} checked={settings.showCases} onChange={set('showCases')} />
-          <button className="tour-again" onClick={onTour}>
-            ▶ {t('Replay the guided example')}
-          </button>
         </div>
       )}
 

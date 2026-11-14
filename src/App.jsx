@@ -3,6 +3,7 @@ import GlobeView from './components/GlobeView.jsx';
 import PlacePanel from './components/PlacePanel.jsx';
 import Timeline from './components/Timeline.jsx';
 import LiquidTabs from './components/LiquidTabs.jsx';
+import LiquidSwitch from './components/LiquidSwitch.jsx';
 import { unavailableYears } from './lib/timeline.js';
 import LoadingScreen from './components/LoadingScreen.jsx';
 import SettingsMenu from './components/SettingsMenu.jsx';
@@ -65,6 +66,7 @@ export default function App() {
   const [playing, setPlaying] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchNotice, setSearchNotice] = useState(null);
   const restored = useRef(false);
   const initialShare = useRef(readShareState());
   const [geoReady, setGeoReady] = useState(false);
@@ -311,7 +313,9 @@ export default function App() {
             : err.code === 3
               ? t('Finding your location took too long.')
               : t('Your device could not determine its location right now (no Wi-Fi/GPS fix).');
-        flash(`${why}${err.code === 1 ? '' : ` ${t('Search for your city instead.')}`}`, 7000);
+        // El aviso va dentro del buscador (en celular el buscador taparía un toast)
+        setToast(null);
+        setSearchNotice(`${why}${err.code === 1 ? '' : ` ${t('Search for your city instead.')}`}`);
         setSearchOpen(true);
       },
       { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 },
@@ -600,6 +604,7 @@ export default function App() {
             className={`icon-sq ${searchOpen ? 'on' : ''}`}
             onClick={() => {
               setSearchOpen((o) => !o);
+              setSearchNotice(null);
               setSettingsOpen(false);
               setExamplesOpen(false);
             }}
@@ -657,9 +662,6 @@ export default function App() {
               </div>
             )}
           </div>
-          <button className="icon-sq" onClick={() => setWelcome(true)} aria-label={t('What is this?')} title={t('What is this?')}>
-            <span className="q">?</span>
-          </button>
           <button
             className={`icon-sq ${settingsOpen ? 'on' : ''}`}
             onClick={() => {
@@ -755,7 +757,11 @@ export default function App() {
       {data && geo && (
         <SearchBox
           open={searchOpen}
-          onClose={() => setSearchOpen(false)}
+          onClose={() => {
+            setSearchOpen(false);
+            setSearchNotice(null);
+          }}
+          notice={searchNotice}
           geo={geo}
           lang={lang}
           cases={data.cases}
@@ -833,6 +839,15 @@ export default function App() {
             <span className="legend-scale">{legendScale}</span>
             <span>{style.posLabel} →</span>
           </div>
+          <div className="dock-sig">
+            <LiquidSwitch
+              compact
+              checked={settings.sigOnly}
+              onChange={(v) => setSettings((s) => ({ ...s, sigOnly: v }))}
+              label={t('Only significant trends')}
+              title={t('Hide cells that do not pass the statistical test after FDR correction')}
+            />
+          </div>
           </div>
         </Timeline>
       )}
@@ -852,6 +867,10 @@ export default function App() {
           setActiveLayer={pickLayer}
           onCase={applyCase}
           onTour={startTour}
+          onAbout={() => {
+            setSettingsOpen(false);
+            setWelcome(true);
+          }}
           geoReady={geoReady}
         />
       )}

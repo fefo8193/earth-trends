@@ -33,7 +33,7 @@ const norm = (s) =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase();
 
-export default function SearchBox({ open, onClose, geo, cases, onPick, onLocate, lang }) {
+export default function SearchBox({ open, onClose, geo, cases, onPick, onLocate, lang, notice }) {
   const [q, setQ] = useState('');
   const [remote, setRemote] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -150,6 +150,7 @@ export default function SearchBox({ open, onClose, geo, cases, onPick, onLocate,
         </button>
       </div>
 
+      {notice && <p className="search-notice" role="alert">{notice}</p>}
       <button
         className="search-locate"
         onClick={() => {
