@@ -204,6 +204,7 @@ export const ES = {
   "Place search ©": "Búsqueda de lugares ©",
   "contributors (Nominatim). Online search sends the entered place name to this service.": "colaboradores (Nominatim). La búsqueda en línea envía el nombre escrito a este servicio.",
   "Layers": "Capas",
+  "Significant only": "Solo significativas",
   "What is EarthTrends?": "¿Qué es EarthTrends?",
   "Metadata": "Metadatos",
   "Method": "Método",
