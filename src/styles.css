@@ -2525,3 +2525,296 @@ kbd {
   .app.has-panel:has(.panel-b) .panel-a { left:8px !important; right:calc(50% + 4px) !important; }
   .app.has-panel:has(.panel-b) .panel-b { left:calc(50% + 4px) !important; right:8px !important; }
 }
+
+/* ===================================================================
+   Compare paso a paso (todas las pantallas)
+   =================================================================== */
+.compare-guide {
+  position: absolute;
+  left: 50%;
+  top: 74px;
+  transform: translateX(-50%);
+  width: var(--modes-w, 420px);
+  box-sizing: border-box;
+  z-index: 16;
+  padding: 9px 12px 10px;
+  border-radius: 14px;
+  text-align: center;
+  animation: fadeUp 0.4s var(--ease) both;
+}
+.cg-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: 11px var(--mono);
+}
+.cg-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 46%;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cg-step b {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 10px;
+}
+.cg-step.on {
+  color: #fff;
+  border-color: var(--cyan);
+  box-shadow: 0 0 14px rgba(62, 197, 255, 0.35);
+}
+.cg-step.on b {
+  background: var(--cyan);
+  color: #04121f;
+}
+.cg-step.done {
+  color: #9be7c4;
+  border-color: rgba(120, 230, 180, 0.45);
+}
+.cg-arrow {
+  color: var(--text-dim);
+}
+.compare-guide p {
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  color: var(--text);
+}
+.cg-reset {
+  margin-top: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font: 10px var(--mono);
+  color: var(--text-dim);
+}
+.cg-reset:hover {
+  color: #fff;
+  border-color: var(--cyan);
+}
+
+/* ===================================================================
+   Celular (clase .phone desde JS): una "hoja" de lugar con pestañas A/B
+   =================================================================== */
+.sheet-bar {
+  display: none;
+}
+.app.phone {
+  --sheet-h: min(52svh, calc(100svh - 250px));
+}
+.app.phone .compare-guide {
+  top: 112px;
+  width: calc(100vw - 16px);
+}
+.app.phone .slot-pick {
+  display: none;
+}
+.app.phone .sheet-bar {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: calc(var(--timeline-height, 190px) + 36px);
+  z-index: 13;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 14px;
+  animation: fadeUp 0.35s var(--ease) both;
+}
+.app.phone.sheet-open .sheet-bar {
+  bottom: calc(var(--sheet-h) + 14px);
+}
+.sheet-tabs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 4px;
+}
+.sheet-tabs button,
+.sheet-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.sheet-title {
+  color: var(--text);
+}
+.sheet-tabs b,
+.sheet-title b {
+  flex: none;
+  font: 600 10px var(--mono);
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(62, 197, 255, 0.18);
+  color: var(--cyan);
+}
+.sheet-tabs button.b b {
+  background: rgba(255, 182, 92, 0.18);
+  color: #ffb65c;
+}
+.sheet-tabs button.on {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.sheet-toggle {
+  flex: none;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  font: 11px var(--mono);
+  color: var(--cyan);
+}
+
+/* Vertical: la hoja ocupa la parte de abajo; el dock se oculta mientras está abierta */
+.app.phone .panel,
+.app.phone.has-panel .panel-a,
+.app.phone.has-panel .panel-b,
+.app.phone.has-panel:has(.panel-b) .panel-a,
+.app.phone.has-panel:has(.panel-b) .panel-b {
+  left: 8px !important;
+  right: 8px !important;
+  top: auto !important;
+  bottom: 8px !important;
+  width: auto !important;
+  height: var(--sheet-h);
+  max-height: var(--sheet-h) !important;
+  animation: sheetUp 0.4s var(--ease) both;
+}
+@keyframes sheetUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+.app.phone.sheet-open .timeline,
+.app.phone.sheet-open .credits {
+  display: none;
+}
+/* Tutorial compacto, arriba, sin pisar la hoja */
+.app.phone .tour {
+  top: 112px;
+  left: 8px;
+  right: 8px;
+  width: auto;
+  transform: none;
+  padding: 10px 12px 9px;
+  max-height: calc(100svh - var(--sheet-h) - 190px);
+  overflow-y: auto;
+  animation: fadeUp 0.4s var(--ease) both;
+}
+.app.phone .tour h3 {
+  font-size: 15px;
+  margin: 4px 0 4px;
+}
+.app.phone .tour p {
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin: 0 0 6px;
+}
+.app.phone.touring .sheet-bar {
+  display: none;
+}
+
+/* Horizontal (celular acostado): ficha a la izquierda, globo y dock a la derecha */
+.app.phone.land .topbar {
+  display: flex;
+  flex-wrap: nowrap;
+  height: 56px;
+  padding: 8px 14px;
+}
+.app.phone.land .modes.liquid-tabs {
+  position: absolute;
+  left: 50%;
+  top: 9px;
+  width: min(380px, 40vw);
+  transform: translateX(-50%);
+}
+.app.phone.land .modes.liquid-tabs button {
+  font-size: 9.5px;
+  padding: 6px 3px;
+}
+.app.phone.land {
+  --side-w: min(360px, 44vw);
+}
+.app.phone.land .panel,
+.app.phone.land.has-panel .panel-a,
+.app.phone.land.has-panel .panel-b,
+.app.phone.land.has-panel:has(.panel-b) .panel-a,
+.app.phone.land.has-panel:has(.panel-b) .panel-b {
+  left: 8px !important;
+  right: auto !important;
+  width: var(--side-w) !important;
+  top: 108px !important;
+  bottom: 8px !important;
+  height: auto;
+  max-height: none !important;
+}
+.app.phone.land .sheet-bar,
+.app.phone.land.sheet-open .sheet-bar {
+  top: 60px;
+  bottom: auto;
+  left: 8px;
+  right: auto;
+  width: var(--side-w);
+}
+.app.phone.land.sheet-open .timeline {
+  display: grid;
+  left: calc(var(--side-w) + 16px);
+  right: 8px;
+  width: auto;
+  transform: none;
+  bottom: 8px;
+}
+.app.phone.land .timeline.dock {
+  padding: 6px 14px 4px;
+}
+.app.phone.land .dock-legend {
+  margin-bottom: 3px;
+  padding-bottom: 4px;
+}
+.app.phone.land .compare-guide {
+  top: 60px;
+  width: min(440px, 60vw);
+}
+.app.phone.land .tour {
+  top: 60px;
+  left: auto;
+  right: 8px;
+  width: min(380px, calc(100vw - var(--side-w) - 32px));
+  max-height: calc(100svh - var(--timeline-height, 120px) - 80px);
+}
+.app.phone.land .credits {
+  display: none;
+}
+/* Horizontal con ficha abierta: el globo se corre al espacio libre de la derecha */
+.app.phone.land .globe-wrap {
+  transition: transform 0.5s var(--ease);
+}
+.app.phone.land.sheet-open .globe-wrap {
+  transform: translateX(calc(var(--side-w) / 2 + 4px));
+}

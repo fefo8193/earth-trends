@@ -31,6 +31,9 @@ const MIRROR_TAG = 'climate mirror';
 
 let uid = 0;
 
+const PHONE_MQ = '(max-width: 860px), (max-height: 500px) and (max-width: 1000px)';
+const LAND_MQ = '(max-height: 500px) and (max-width: 1000px)';
+
 export default function App() {
   const [data, setData] = useState(null);
   const [geo, setGeo] = useState(null);
@@ -59,6 +62,11 @@ export default function App() {
   const [welcome, setWelcome] = useState(true);
   const [tour, setTour] = useState(null); // índice del paso del recorrido guiado
   const [touched, setTouched] = useState(false);
+  // Celular: una sola "hoja" con el lugar (pestañas A/B) que se puede bajar para ver el globo
+  const [isPhone, setIsPhone] = useState(() => window.matchMedia(PHONE_MQ).matches);
+  const [isLand, setIsLand] = useState(() => window.matchMedia(LAND_MQ).matches);
+  const [sheetSide, setSheetSide] = useState('A');
+  const [sheetOpen, setSheetOpen] = useState(true);
   const [examplesOpen, setExamplesOpen] = useState(true);
   const [settings, setSettings] = useState({
     colorMode: 'anomaly',
@@ -346,6 +354,7 @@ export default function App() {
     (m) => {
       mirrorRequest.current++; clearTimeout(mirrorFlightTimer.current);
       setMode(m);
+      setExamplesOpen(false);
       if (m === 'explore') {
         setPlaceB(null);
       } else if (m === 'opposite' && placeA) {
@@ -453,6 +462,35 @@ export default function App() {
     ];
   }, [tourCase, tourPlaces, data, activeLayer]);
 
+  // ---- Celular: tamaño de pantalla y hoja de lugares -------------------------
+  useEffect(() => {
+    const mp = window.matchMedia(PHONE_MQ);
+    const ml = window.matchMedia(LAND_MQ);
+    const on = () => {
+      setIsPhone(mp.matches);
+      setIsLand(ml.matches);
+    };
+    mp.addEventListener('change', on);
+    ml.addEventListener('change', on);
+    return () => {
+      mp.removeEventListener('change', on);
+      ml.removeEventListener('change', on);
+    };
+  }, []);
+  useEffect(() => {
+    setSheetOpen(true);
+    if (!placeB) setSheetSide('A');
+  }, [placeA?.id]);
+  useEffect(() => {
+    if (placeB) {
+      setSheetSide('B');
+      setSheetOpen(true);
+    }
+  }, [placeB?.id]);
+  useEffect(() => {
+    if (tour != null) setSheetOpen(true);
+  }, [tour]);
+
   // ---- Teclado -------------------------------------------------------------
   useEffect(() => {
     const onKey = (e) => {
@@ -500,8 +538,18 @@ export default function App() {
       : `±${(legendSource.viz?.anomScale ?? legendSource.stats?.anomAbsP95 ?? 0).toFixed(activeLayer === 'temp' ? 2 : 0)} ${style.units}`
     : '';
 
+  // Compare paso a paso: mientras falta un lugar, guía arriba; en celular el panel A espera a que elijas B
+  const pickingCompare = mode === 'versus' && tour == null && !welcome && (!placeA || !placeB);
+  const waitB = isPhone && mode === 'versus' && tour == null && placeA && !placeB;
+  const showA = !!placeA && !waitB && (!isPhone || ((!placeB || sheetSide === 'A') && sheetOpen));
+  const showB = !!placeB && (!isPhone || (sheetSide === 'B' && sheetOpen));
+  const showSheetBar = isPhone && !!placeA && !waitB;
+  const sheetUp = isPhone && (showA || showB);
+
   return (
-    <div className={`app ${placeA || placeB ? 'has-panel' : ''} ${tour != null ? 'touring' : ''}`}>
+    <div
+      className={`app ${placeA || placeB ? 'has-panel' : ''} ${tour != null ? 'touring' : ''} ${isPhone ? 'phone' : ''} ${isLand ? 'land' : ''} ${sheetUp ? 'sheet-open' : ''}`}
+    >
       <div className="space-bg" />
       {tex && (
         <GlobeView
@@ -592,6 +640,64 @@ export default function App() {
           </button>
         </div>
       )}
+      {pickingCompare && (
+        <div className="compare-guide glass" role="status">
+          <div className="cg-steps">
+            <span className={`cg-step a ${placeA ? 'done' : 'on'}`}>
+              <b>1</b> {placeA ? `${placeA.name} ✓` : 'Place A'}
+            </span>
+            <span className="cg-arrow">→</span>
+            <span className={`cg-step b ${placeA ? 'on' : ''}`}>
+              <b>2</b> Place B
+            </span>
+          </div>
+          <p>{placeA ? 'Now tap a second place on the globe to compare.' : 'Tap a first place on the globe, then a second one.'}</p>
+          {placeA && (
+            <button
+              className="cg-reset"
+              onClick={() => {
+                setPlaceA(null);
+                setSlot('A');
+              }}
+            >
+              Change place A
+            </button>
+          )}
+        </div>
+      )}
+      {showSheetBar && (
+        <div className={`sheet-bar glass ${sheetOpen ? 'open' : ''}`}>
+          {placeB ? (
+            <div className="sheet-tabs" role="tablist">
+              {[
+                ['A', placeA],
+                ['B', placeB],
+              ].map(([s, p]) => (
+                <button
+                  key={s}
+                  role="tab"
+                  aria-selected={sheetSide === s}
+                  className={`${s.toLowerCase()} ${sheetSide === s ? 'on' : ''}`}
+                  onClick={() => {
+                    setSheetSide(s);
+                    setSlot(s); // el próximo toque en el globo reemplaza el lugar que estás viendo
+                    setSheetOpen(true);
+                  }}
+                >
+                  <b>{s}</b> {p.name}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <span className="sheet-title">
+              <b>A</b> {placeA.name}
+            </span>
+          )}
+          <button className="sheet-toggle" onClick={() => setSheetOpen((o) => !o)} aria-expanded={sheetOpen}>
+            {sheetOpen ? 'Globe ▾' : 'Details ▴'}
+          </button>
+        </div>
+      )}
       {toast && (
         <div ref={toastRef} className="toast glass" role="status">
           {toast}
@@ -614,7 +720,7 @@ export default function App() {
         />
       )}
 
-      {data && placeA && (
+      {data && showA && (
         <PlacePanel
           key={`A-${placeA.id}`}
           side="A"
@@ -634,7 +740,7 @@ export default function App() {
           }}
         />
       )}
-      {data && placeB && (
+      {data && showB && (
         <PlacePanel
           key={`B-${placeB.id}`}
           side="B"
