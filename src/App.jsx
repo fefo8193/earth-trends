@@ -181,7 +181,7 @@ export default function App() {
     if (!el) return;
     const dock = document.querySelector('.timeline');
     const top = dock ? dock.getBoundingClientRect().top : window.innerHeight - 24;
-    el.style.bottom = `${Math.max(16, window.innerHeight - top + 12)}px`;
+    el.style.bottom = `${Math.max(16, window.innerHeight - top + 52)}px`; // deja lugar al interruptor flotante
   }, [toast]);
 
   // ---- Lugares -------------------------------------------------------------
@@ -826,6 +826,15 @@ export default function App() {
           }}
         >
           <div className="dock-legend">
+          <LiquidSwitch
+            compact
+            className="dock-float glass"
+            checked={settings.sigOnly}
+            onChange={(v) => setSettings((s) => ({ ...s, sigOnly: v }))}
+            label={t('Significant only')}
+            title={t('Hide cells that do not pass the statistical test after FDR correction')}
+          />
+
             <div className="dock-top">
           <LiquidTabs className="legend-layers" label={t('Climate layer')} options={layerOptions} value={activeLayer} onChange={pickLayer} />
 
@@ -836,17 +845,7 @@ export default function App() {
             style={{ background: legendGradient(activeLayer) }} />
           <div className="legend-labels">
             <span>← {style.negLabel}</span>
-            <span className="legend-mid">
-              <span className="legend-scale">{legendScale}</span>
-              <LiquidSwitch
-                compact
-                className="legend-sig"
-                checked={settings.sigOnly}
-                onChange={(v) => setSettings((s) => ({ ...s, sigOnly: v }))}
-                label={t('Significant only')}
-                title={t('Hide cells that do not pass the statistical test after FDR correction')}
-              />
-            </span>
+            <span className="legend-scale">{legendScale}</span>
             <span>{style.posLabel} →</span>
           </div>
           </div>

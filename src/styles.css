@@ -3120,3 +3120,47 @@ kbd {
 .legend-labels {
   align-items: center;
 }
+
+/* "Significant only" flotando justo encima de la barra de abajo */
+.lswitch.dock-float {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 5px 13px 5px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(160, 202, 235, 0.18);
+  white-space: nowrap;
+  z-index: 2;
+  transition: border-color 260ms ease, box-shadow 260ms ease, color 260ms ease, background 260ms ease;
+}
+.lswitch.dock-float.on {
+  border-color: color-mix(in srgb, var(--sw-accent) 45%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--sw-accent) 22%, transparent);
+}
+/* Se ilumina al pasar el cursor (todos los interruptores) */
+.lswitch:hover {
+  color: #f2fbff;
+}
+.lswitch:hover .lswitch-track {
+  border-color: color-mix(in srgb, var(--sw-accent) 55%, transparent);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35), 0 0 10px color-mix(in srgb, var(--sw-accent) 30%, transparent);
+}
+.lswitch:hover .lswitch-lens {
+  border-color: color-mix(in srgb, var(--sw-accent) 75%, white);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 12px color-mix(in srgb, var(--sw-accent) 55%, transparent);
+}
+.lswitch.dock-float:hover {
+  border-color: color-mix(in srgb, var(--sw-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--sw-accent) 10%, rgba(11, 27, 52, 0.55));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--sw-accent) 35%, transparent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--sw-accent) 55%, transparent);
+}
+/* En celular, mientras la hoja del lugar está abierta, no se superpone con ella */
+.app.phone.sheet-open .lswitch.dock-float {
+  display: none;
+}
+.layer-status {
+  bottom: calc(var(--timeline-height, 158px) + 70px);
+}

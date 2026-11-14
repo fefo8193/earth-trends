@@ -194,7 +194,8 @@ function createStarSky() {
         // Ascensión recta = "longitud celeste": se ubica como lat = dec, lng = ra (el grupo resta el GMST)
         toVec(dec, ra, RS).toArray(pos, i * 3);
         bvColor(bv).toArray(col, i * 3);
-        size[i] = Math.max(1.1, Math.min(5.2, 4.6 - 0.62 * mag)) * dpr;
+        // En pantallas de baja densidad, un punto de ~1 px desaparece: piso de 2.2 px físicos
+        size[i] = Math.max(2.2, Math.max(1.1, Math.min(5.2, 4.6 - 0.62 * mag)) * dpr);
       });
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -218,7 +219,7 @@ varying float vSize;
 void main() {
   float d = length(gl_PointCoord - 0.5) * 2.0;
   float core = smoothstep(1.0, 0.0, d);
-  float a = pow(core, 1.6) * clamp(vSize / 3.0, 0.35, 1.0);
+  float a = pow(core, 1.35) * clamp(vSize / 3.0, 0.6, 1.0);
   if (a < 0.01) discard;
   gl_FragColor = vec4(vColor, a);
 }`,
