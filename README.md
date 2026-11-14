@@ -1,0 +1,128 @@
+# EarthTrends
+
+NASA Space Apps 2026 · **Be An Earth System Trend Detective!**
+
+EarthTrends explores NASA-derived annual rainfall, near-surface temperature, terrestrial water storage and clear-sky fraction for **2005–2025**. It combines an interactive globe, four local time series, statistical trend results, paired locations and a nearby regional reference. All application text is in English.
+
+## Run locally
+
+Use Node.js 20+ and npm. The generated data and visual assets in `public/` are sufficient to run the frontend; Python and Earthdata credentials are not needed by visitors.
+
+```bash
+npm install
+npm run dev -- --port 5173
+```
+
+On the development workstation, Node is available in `~/.local/node/bin`:
+
+```bash
+PATH="$HOME/.local/node/bin:$PATH" npm run dev -- --port 5173
+```
+
+## Build and verify without publishing
+
+```bash
+npm test
+npm run build
+npm run preview -- --port 5175
+```
+
+The Vite build automatically regenerates the packed data **before** copying `public/` into `dist/`. Direct `node node_modules/vite/bin/vite.js build` builds do the same. For a future subdirectory deployment, pass the intended base, for example `npm run build -- --base=/earthtrends/`. These commands only create a local build; they do not deploy or publish it.
+
+WebGL 2 is required for the globe. Module workers and `DecompressionStream` improve loading on modern browsers. The original JSON path remains available if a browser cannot use the packed/worker path. Geolocation and clipboard access depend on browser permissions and a secure context; localhost is suitable for local testing. Real-device performance still needs to be measured rather than inferred from viewport emulation.
+
+## Using the app
+
+- **ONE PLACE:** select a location on the globe, use the bundled place search, or enter latitude and longitude.
+- **COMPARE:** choose two places and inspect the same layer and year side by side.
+- **MIRROR:** find a distant terrestrial cell with a contrasting trend. The selection score favors significance, a different continent and distance; it is an exploration aid, not a causal comparison.
+- **Nearby region:** expand the regional card in a place panel to compare the selected observation with a 500 km reference.
+- **Timeline:** drag or click a year. Arrow keys move one year, Page Up/Down move five years, and Home/End select the first/last year.
+- **Settings:** select layers, annual anomaly or long-term trend, significance filtering, rotation, metadata and Method.
+- **Examples and tour:** six real example comparisons and a guided walkthrough.
+- **Exports:** CSV, JSON and GeoJSON contain the original local series, source information and statistical results. Downloads wait for all four layers; missing observations remain missing. Copy link restores places, layer, year, mode and map view.
+
+Other shortcuts: `/` or Cmd/Ctrl+K opens search; `1`, `2`, `3` select modes; Space toggles year playback; Escape closes the current panel or overlay. New location selections are blocked during camera flights.
+
+Bundled cities, countries and examples provide immediate local suggestions. **Search online** is an explicit action, with cached and serialized remote requests. It sends the entered place name to OpenStreetMap Nominatim. No online autocomplete requests are sent while typing. Review the [Nominatim usage policy](https://operations.osmfoundation.org/policies/nominatim/) before enabling this service for a public audience: the public service prohibits autocomplete and limits aggregate application traffic to one request per second. A larger deployment needs an appropriate provider or managed proxy. `VITE_GEOCODING_ENDPOINT` can select another compatible endpoint at build time. EarthTrends does not send GPS coordinates to this geocoder automatically.
+
+## NASA products
+
+| Layer | Product and variable | App units |
+| --- | --- | --- |
+| Rainfall | [GPM IMERG Final Monthly, GPM_3IMERGM v07](https://disc.gsfc.nasa.gov/datasets/GPM_3IMERGM_07/summary), precipitation | mm/year |
+| Temperature | [MERRA-2 M2TMNXSLV v5.12.4](https://disc.gsfc.nasa.gov/datasets/M2TMNXSLV_5.12.4/summary), T2M | °C |
+| Water | [GRACE/GRACE-FO JPL Mascon RL06.3 v04 CRI](https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4), equivalent water thickness | cm |
+| Stars | [MERRA-2 M2TMNXRAD v5.12.4](https://disc.gsfc.nasa.gov/datasets/M2TMNXRAD_5.12.4/summary), 100 × (1 − CLDTOT) | % clear sky |
+
+MERRA-2 is reanalysis, not a direct measurement at each clicked coordinate. GRACE water storage is a broad regional signal, not a street-level groundwater measurement: JPL's underlying mascons are approximately 3°, despite finer gridded products. Water is displayed over land. SWOT is not used by the current four layers.
+
+Stars is a cloud-based proxy for visibility, not a star count or a nighttime weather forecast. Its supplementary light-pollution note samples relative brightness in [NASA Earth at Night](https://earthobservatory.nasa.gov/features/NightLights); it is not calibrated sky brightness and is not a 2005–2025 light-pollution trend.
+
+The statistical grid is **1° × 1°**. Source resolutions differ. The 0.25° visualization grid, display interpolation and smoothing do not increase measurement resolution. Original provenance, generation times and ingestion details are recorded in `public/data/layer_*.json` and shown in Metadata.
+
+## Statistical and display methods
+
+1. Monthly inputs are converted to consistent units and regridded with latitude/area weighting. Annual values combine monthly climatology and available monthly anomalies to reduce seasonal bias in partial years. For the monthly products, a cell needs at least nine valid months in an annual value.
+2. The pipeline tests cells with at least ten valid annual observations using the **Hamed–Rao modified Mann–Kendall test**, through [pyMannKendall](https://joss.theoj.org/papers/10.21105/joss.01556). The test uses available observations in chronological order; missing years are not fabricated. Autocorrelation correction remains an approximation for incomplete series.
+3. **Benjamini–Hochberg FDR** correction is applied across tested cells within each layer. The UI uses the adjusted q-value at α = 0.05. Significance is evidence under the test assumptions, not a 95% probability that a trend is true. Failure to detect a trend does not establish absence of change or identify its cause.
+4. **Sen's slope** is the median pairwise rate using actual calendar-year differences. Missing years are not treated as adjacent calendar years.
+5. **Pettitt's test** is evaluated for a selected local series. Its approximate p-value/change year is exploratory and is not included in the global Mann–Kendall FDR correction.
+6. The globe shows either the selected year's anomaly from its cell's available 2005–2025 mean or the Sen slope per year. Display scaling uses robust percentiles, so extreme colors can saturate. All layers use light 0.15° Gaussian **display-only** smoothing and scalar interpolation before coloring. Water retains its existing 0.25° GRACE display smoothing. Missing-data and significance masks remain separate. Premultiplied color/alpha filtering prevents transparent texels from introducing black fringes.
+
+### Missing Water observations and gray estimates
+
+There are no annual Water observations for **2015, 2017 and 2018** under the monthly-coverage requirement. The chart bridges internal gaps with faint gray linear interpolation between the nearest observed years, labeled **Estimated**. It does not extrapolate leading/trailing gaps. These estimates are only visual: the statistical tests, original downloads, CSV/JSON/GeoJSON and regional comparisons keep the missing observations. The red timeline bands still mark the absent annual products.
+
+### Nearby regional reference
+
+The reference is the area-weighted mean of available 1° cells within **500 km of the sampled grid cell**. Weight is proportional to cosine(latitude). Land is matched with land and ocean with ocean; Water uses land only. The window includes the sampled cell when eligible. An annual mean requires at least five observed cells and at least 75% of the eligible area. Missing annual values and chart estimates are excluded. A regional Sen slope requires at least ten valid annual means and uses actual elapsed years. It is descriptive: **no new p-value, FDR result or significance claim is attached to the aggregate**. The reference is a radius-based neighborhood, not an administrative region.
+
+## Loading and data format
+
+Only the requested layer loads at startup, including a layer restored from a shared link. Opening a place requests the remaining layers for the four charts and complete exports. Requests are deduplicated and cached; selecting another layer does not let an older response overwrite the selection. Failed layers expose **Retry**, while already loaded layers remain usable.
+
+`public/data/packed/*.etb.gz` files use the ETB1 format: a small JSON header and aligned typed arrays, gzip-compressed. Existing scaled integer observations are stored as Int16 where they fit, using the **original** scale and a missing-value sentinel; decoding reconstructs exactly the frontend Float32 values. Other scientific arrays retain their Float32/byte representation. No new quantization is introduced. Generation checks every value, climatology, mask, slope, p/q-value, tau, z and trend flag bit for bit against preparation of the original JSON.
+
+Current packaged sizes are approximately 2.72 MiB Rainfall, 1.90 MiB Temperature, 0.41 MiB Water and 2.41 MiB Stars, compared with 31.6 MiB total uncompressed JSON. These figures exclude the JavaScript bundle, base imagery, fonts and map PNGs; actual transfer depends on hosting and caching. Original JSON files remain available as downloads and as a compatible loading fallback.
+
+The Blue Marble base uses the existing 8K/4K device policy, anisotropic filtering and mipmaps. Dynamic maps stay at 4K. Map preparation runs in a worker, decoded map caching is bounded, and small GPU uploads are double-buffered so only complete maps become visible. These measures improve responsiveness; they do not guarantee a fixed frame rate on every device.
+
+## Rebuilding NASA-derived data
+
+Python 3.11+ is recommended. Install the pipeline dependencies only if regenerating the data:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r scripts/requirements.txt
+.venv/bin/python scripts/climate_pipeline.py --scan
+.venv/bin/python scripts/climate_pipeline.py
+npm run pack:data
+```
+
+A single layer can be rebuilt with `--only precip`, `--only temp`, `--only water` or `--only stars`. Defaults are `--start 2005 --end 2025 --res 1 --viz-res 0.25 --test hamed_rao --alpha 0.05 --min-years 10`. The packer does not rerun statistical tests or download anything. A fresh build also repacks automatically.
+
+NASA downloads use `scripts/download_nasa.py` and `earthaccess` with an already configured Earthdata account. Keep authentication outside the repository; the frontend and packer never require Earthdata passwords. Do not place `.netrc`, credentials, raw authenticated downloads or tokens in `public/`.
+
+`npm run mock` is for development only and replaces generated data with synthetic data. It is not a recovery step for users and must not be used for a real-data demonstration.
+
+## Project layout
+
+```text
+src/components/     Globe, timeline, panels, charts, regional reference, search, recovery
+src/lib/            Scientific access, lazy cache, binary decoder, regional calculations,
+                    map workers, texture uploads, sharing and exports
+scripts/            NASA ingestion/pipeline, visualization export, lossless packer
+public/data/        Original JSON, metadata, cases, packed files and visualization PNGs
+public/assets/      Earth textures, Natural Earth geography/cities, real-sky catalog
+raw-data/           Local NASA inputs (ignored; never shipped with the frontend)
+tests/              Reproducible integrity, loading/retry, regional and regression tests
+```
+
+Other visual/geographic sources: NASA Blue Marble and Earth at Night, Natural Earth countries/cities, and the Yale Bright Star Catalog/constellation data distributed via d3-celestial. Attribution should remain with redistributed assets.
+
+## Local acceptance checks
+
+`npm test` checks all four real packed datasets, invalid/truncated files, JSON fallback, lazy loading/deduplication, failed-layer retry, cancellation, regional weighting/coverage, Sen year spacing, shared-state parsing, Water estimates, transparent filtering and camera-flight locks.
+
+For browser acceptance testing, build first, then optionally run `node scripts/smoke_server.mjs dist`. This **loopback-only test helper** supports deterministic data failures, delayed transfers and simulated denied geolocation without asking for a real position. It is not a public hosting server. Verify initial-layer-only requests, Retry, all four charts, Examples/Mirror, shared links, all three downloads, local/online-search fallback and short/narrow layouts. Record physical-device tests separately: viewport and denied-permission simulations do not establish performance on real iPhone/Android hardware.

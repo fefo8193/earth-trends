@@ -1,0 +1,28 @@
+{
+  "name": "earth-trends",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "mock": ".venv/bin/python scripts/climate_pipeline.py --mock",
+    "data": ".venv/bin/python scripts/climate_pipeline.py",
+    "data:scan": ".venv/bin/python scripts/climate_pipeline.py --scan",
+    "setup:py": "python3 -m venv .venv && .venv/bin/pip install -r scripts/requirements.txt",
+    "pack:data": "node scripts/pack_data.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "d3-geo": "^3.1.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-globe.gl": "^2.27.2",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8"
+  }
+}

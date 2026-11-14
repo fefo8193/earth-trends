@@ -1,0 +1,3 @@
+import test from'node:test';import assert from'node:assert/strict';import{readShareState}from'../src/lib/share.js';
+test('a shared view retains places, layer, year, mode and trend view',()=>{const s=readShareState('#a=-34.603,-58.398,Buenos+Aires&b=35,139,Tokyo&layer=water&mode=versus&y=2017&view=trend');assert.equal(s.a.name,'Buenos Aires');assert.equal(s.b.name,'Tokyo');assert.equal(s.layer,'water');assert.equal(s.year,2017);assert.equal(s.mode,'versus');assert.equal(s.view,'trend');});
+test('bad coordinates and unknown modes are rejected safely',()=>{assert.equal(readShareState('#a=999,0,x'),null);assert.equal(readShareState('#a=0,0,x&mode=bad').mode,null);});

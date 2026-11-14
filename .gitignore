@@ -1,0 +1,12 @@
+node_modules
+dist
+.venv
+__pycache__
+raw-data/*
+!raw-data/.gitkeep
+.DS_Store
+
+# Documentos internos de planificación (no públicos)
+docs/*.pdf
+.claude/
+*.tmp

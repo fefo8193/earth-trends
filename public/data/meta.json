@@ -1,0 +1,238 @@
+{
+ "schema": "climate-mirror/meta@1",
+ "app": "EarthTrends",
+ "generatedAt": "2026-11-14T16:08:43+00:00",
+ "years": [
+  2005,
+  2025
+ ],
+ "grid": {
+  "res": 1,
+  "nlat": 180,
+  "nlon": 360,
+  "lat0": -89.5,
+  "lon0": -179.5,
+  "order": "cell = ilat * nlon + ilon (lat ascendente, lon ascendente)"
+ },
+ "mk": {
+  "test": "hamed_rao",
+  "alpha": 0.05
+ },
+ "layers": [
+  {
+   "id": "precip",
+   "label": "Precipitación",
+   "file": "layer_precip.json",
+   "units": "mm/año",
+   "product": "NASA GPM IMERG Monthly (GPM_3IMERGM)",
+   "source": "nasa",
+   "generatedAt": "2026-11-14T14:59:12+00:00",
+   "viz": {
+    "res": 0.25,
+    "width": 1440,
+    "height": 720,
+    "anomScale": 469.7677,
+    "trendScale": 22.93674,
+    "years": {
+     "2005": "viz/precip/2005.png",
+     "2006": "viz/precip/2006.png",
+     "2007": "viz/precip/2007.png",
+     "2008": "viz/precip/2008.png",
+     "2009": "viz/precip/2009.png",
+     "2010": "viz/precip/2010.png",
+     "2011": "viz/precip/2011.png",
+     "2012": "viz/precip/2012.png",
+     "2013": "viz/precip/2013.png",
+     "2014": "viz/precip/2014.png",
+     "2015": "viz/precip/2015.png",
+     "2016": "viz/precip/2016.png",
+     "2017": "viz/precip/2017.png",
+     "2018": "viz/precip/2018.png",
+     "2019": "viz/precip/2019.png",
+     "2020": "viz/precip/2020.png",
+     "2021": "viz/precip/2021.png",
+     "2022": "viz/precip/2022.png",
+     "2023": "viz/precip/2023.png",
+     "2024": "viz/precip/2024.png",
+     "2025": "viz/precip/2025.png"
+    },
+    "trend": "viz/precip/trend.png",
+    "encoding": "PNG LA · gray = 128 + 127·(valor/escala) · alpha 0 = sin dato · norte arriba"
+   },
+   "packed": {
+    "format": "ETB1+gzip",
+    "file": "packed/layer_precip.etb.gz",
+    "bytes": 2847610,
+    "decodedBytes": 4668224,
+    "sha256": "497b460e7260c02338b5b324f75c25bc2019409627646a9b976d3ac18b4396d3"
+   }
+  },
+  {
+   "id": "temp",
+   "label": "Temperatura",
+   "file": "layer_temp.json",
+   "units": "°C",
+   "product": "NASA MERRA-2 T2M (M2TMNXSLV)",
+   "source": "nasa",
+   "generatedAt": "2026-11-14T15:18:55+00:00",
+   "viz": {
+    "res": 0.25,
+    "width": 1440,
+    "height": 720,
+    "anomScale": 1.0423,
+    "trendScale": 0.07265,
+    "years": {
+     "2005": "viz/temp/2005.png",
+     "2006": "viz/temp/2006.png",
+     "2007": "viz/temp/2007.png",
+     "2008": "viz/temp/2008.png",
+     "2009": "viz/temp/2009.png",
+     "2010": "viz/temp/2010.png",
+     "2011": "viz/temp/2011.png",
+     "2012": "viz/temp/2012.png",
+     "2013": "viz/temp/2013.png",
+     "2014": "viz/temp/2014.png",
+     "2015": "viz/temp/2015.png",
+     "2016": "viz/temp/2016.png",
+     "2017": "viz/temp/2017.png",
+     "2018": "viz/temp/2018.png",
+     "2019": "viz/temp/2019.png",
+     "2020": "viz/temp/2020.png",
+     "2021": "viz/temp/2021.png",
+     "2022": "viz/temp/2022.png",
+     "2023": "viz/temp/2023.png",
+     "2024": "viz/temp/2024.png",
+     "2025": "viz/temp/2025.png"
+    },
+    "trend": "viz/temp/trend.png",
+    "encoding": "PNG LA · gray = 128 + 127·(valor/escala) · alpha 0 = sin dato · norte arriba"
+   },
+   "packed": {
+    "format": "ETB1+gzip",
+    "file": "packed/layer_temp.etb.gz",
+    "bytes": 1992162,
+    "decodedBytes": 4668120,
+    "sha256": "6a6317daa46de4cbe295bf79a880f0f55874e0ae470e3a65aa1bf0d31ae6273a"
+   }
+  },
+  {
+   "id": "water",
+   "label": "Agua (GRACE-FO)",
+   "file": "layer_water.json",
+   "units": "cm",
+   "product": "GRACE/GRACE-FO JPL Mascon RL06.3 CRI · agua terrestre total (cm eq.)",
+   "source": "nasa",
+   "generatedAt": "2026-11-14T15:20:03+00:00",
+   "viz": {
+    "res": 0.25,
+    "width": 1440,
+    "height": 720,
+    "anomScale": 15.0186,
+    "trendScale": 1.70323,
+    "years": {
+     "2005": "viz/water/2005.png",
+     "2006": "viz/water/2006.png",
+     "2007": "viz/water/2007.png",
+     "2008": "viz/water/2008.png",
+     "2009": "viz/water/2009.png",
+     "2010": "viz/water/2010.png",
+     "2011": "viz/water/2011.png",
+     "2012": "viz/water/2012.png",
+     "2013": "viz/water/2013.png",
+     "2014": "viz/water/2014.png",
+     "2016": "viz/water/2016.png",
+     "2019": "viz/water/2019.png",
+     "2020": "viz/water/2020.png",
+     "2021": "viz/water/2021.png",
+     "2022": "viz/water/2022.png",
+     "2023": "viz/water/2023.png",
+     "2024": "viz/water/2024.png",
+     "2025": "viz/water/2025.png"
+    },
+    "trend": "viz/water/trend.png",
+    "encoding": "PNG LA · gray = 128 + 127·(valor/escala) · alpha 0 = sin dato · norte arriba"
+   },
+   "packed": {
+    "format": "ETB1+gzip",
+    "file": "packed/layer_water.etb.gz",
+    "bytes": 424750,
+    "decodedBytes": 4668204,
+    "sha256": "28c7430118e517fca29c7e563b675a48b785f6efe278257abcec35c522e31831"
+   }
+  },
+  {
+   "id": "stars",
+   "label": "Star visibility",
+   "file": "layer_stars.json",
+   "units": "% clear sky",
+   "product": "NASA MERRA-2 M2TMNXRAD v5.12.4 · clear-sky fraction = 1 − CLDTOT (total cloud area fraction)",
+   "source": "nasa",
+   "generatedAt": "2026-11-14T16:08:42+00:00",
+   "viz": {
+    "res": 0.25,
+    "width": 1440,
+    "height": 720,
+    "anomScale": 5.4121,
+    "trendScale": 0.2813,
+    "years": {
+     "2005": "viz/stars/2005.png",
+     "2006": "viz/stars/2006.png",
+     "2007": "viz/stars/2007.png",
+     "2008": "viz/stars/2008.png",
+     "2009": "viz/stars/2009.png",
+     "2010": "viz/stars/2010.png",
+     "2011": "viz/stars/2011.png",
+     "2012": "viz/stars/2012.png",
+     "2013": "viz/stars/2013.png",
+     "2014": "viz/stars/2014.png",
+     "2015": "viz/stars/2015.png",
+     "2016": "viz/stars/2016.png",
+     "2017": "viz/stars/2017.png",
+     "2018": "viz/stars/2018.png",
+     "2019": "viz/stars/2019.png",
+     "2020": "viz/stars/2020.png",
+     "2021": "viz/stars/2021.png",
+     "2022": "viz/stars/2022.png",
+     "2023": "viz/stars/2023.png",
+     "2024": "viz/stars/2024.png",
+     "2025": "viz/stars/2025.png"
+    },
+    "trend": "viz/stars/trend.png",
+    "encoding": "PNG LA · gray = 128 + 127·(valor/escala) · alpha 0 = sin dato · norte arriba"
+   },
+   "packed": {
+    "format": "ETB1+gzip",
+    "file": "packed/layer_stars.etb.gz",
+    "bytes": 2527050,
+    "decodedBytes": 4668272,
+    "sha256": "5bb45a686a62321c3ddb99d2a149302162264e0fd8e0ce1e60ca330d15e9fd96"
+   }
+  }
+ ],
+ "sources": [
+  {
+   "name": "NASA Earthdata / GES DISC · GPM IMERG Final Monthly (GPM_3IMERGM v07)",
+   "url": "https://disc.gsfc.nasa.gov/datasets/GPM_3IMERGM_07/summary"
+  },
+  {
+   "name": "NASA Earthdata / GES DISC · MERRA-2 M2TMNXSLV v5.12.4 (T2M)",
+   "url": "https://disc.gsfc.nasa.gov/datasets/M2TMNXSLV_5.12.4/summary"
+  },
+  {
+   "name": "NASA Earthdata / GES DISC · MERRA-2 M2TMNXRAD v5.12.4 (CLDTOT, cloud fraction)",
+   "url": "https://disc.gsfc.nasa.gov/datasets/M2TMNXRAD_5.12.4/summary"
+  },
+  {
+   "name": "NASA Earth Observatory · Earth at Night / Black Marble (light pollution)",
+   "url": "https://earthobservatory.nasa.gov/features/NightLights"
+  },
+  {
+   "name": "NASA Giovanni (exploration of GPM IMERG and MERRA-2)",
+   "url": "https://giovanni.gsfc.nasa.gov"
+  },
+  {
+   "name": "NASA PO.DAAC · GRACE/GRACE-FO JPL Mascon RL06.3 v04 CRI (TWS)",
+   "url": "https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4"
+  }
+ ]
+}
