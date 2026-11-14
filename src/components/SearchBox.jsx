@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { geoCentroid } from 'd3-geo';
 
 import { searchOnline } from '../lib/geocoding.js';
+import { t, tf } from '../lib/i18n.js';
 
 function parseCoords(q) {
   const m = q.trim().match(/^(-?\d+(?:\.\d+)?)\s*°?\s*([NS])?[\s,;]+(-?\d+(?:\.\d+)?)\s*°?\s*([EW])?$/i);
@@ -32,7 +33,7 @@ const norm = (s) =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase();
 
-export default function SearchBox({ open, onClose, geo, cases, onPick, onLocate }) {
+export default function SearchBox({ open, onClose, geo, cases, onPick, onLocate, lang }) {
   const [q, setQ] = useState('');
   const [remote, setRemote] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -59,17 +60,18 @@ export default function SearchBox({ open, onClose, geo, cases, onPick, onLocate 
   const local = useMemo(() => {
     if (!geo) return [];
     const countries = geo.items
-      .filter((it) => it.continentLabel !== 'Ocean' && it.name)
+      .filter((it) => it.continent !== 'Seven seas (open ocean)' && it.name)
       .map((it) => {
         const [lon, lat] = geoCentroid(it.feature);
-        return { name: it.name, detail: `Country · ${it.continentLabel}`, lat, lon, key: norm(it.name) };
+        const name = it.name;
+        return { name, detail: `${t('Country')} · ${it.continentLabel}`, lat, lon, key: norm(name === it.nameEn ? name : `${name} ${it.nameEn}`) };
       });
     const ex = (cases || []).flatMap((c) =>
-      [c.a, c.b].map((p) => ({ name: p.name, detail: `Example · ${c.title}`, lat: p.lat, lon: p.lon, key: norm(p.name) })),
+      [c.a, c.b].map((p) => ({ name: p.name, detail: `${t('Example')} · ${tf(c, 'title')}`, lat: p.lat, lon: p.lon, key: norm(p.name) })),
     );
-    const cs = cities.map(([name, country, lat, lon]) => ({ name, detail: `City · ${country}`, lat, lon, key: norm(name) }));
+    const cs = cities.map(([name, country, lat, lon]) => ({ name, detail: `${t('City')} · ${country}`, lat, lon, key: norm(name) }));
     return [...ex, ...cs, ...countries];
-  }, [geo, cases, cities]);
+  }, [geo, cases, cities, lang]);
 
   const coords = parseCoords(q);
   const localHits = useMemo(() => {
@@ -96,7 +98,7 @@ export default function SearchBox({ open, onClose, geo, cases, onPick, onLocate 
 
   const results = useMemo(() => {
     const out = [];
-    if (coords) out.push({ name: `${coords.lat.toFixed(2)}°, ${coords.lon.toFixed(2)}°`, detail: 'Coordinates', ...coords, coordsOnly: true });
+    if (coords) out.push({ name: `${coords.lat.toFixed(2)}°, ${coords.lon.toFixed(2)}°`, detail: t('Coordinates'), ...coords, coordsOnly: true });
     const seen = new Set();
     for (const r of [...localHits, ...remote]) {
       const id = `${norm(r.name)}|${Math.round(r.lat)}|${Math.round(r.lon)}`;
@@ -128,7 +130,7 @@ export default function SearchBox({ open, onClose, geo, cases, onPick, onLocate 
   };
 
   return (
-    <div className="search glass" role="dialog" aria-label="Search a place">
+    <div className="search glass" role="dialog" aria-label={t('Search a place')}>
       <div className="search-field">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <circle cx="11" cy="11" r="7" />
@@ -139,11 +141,11 @@ export default function SearchBox({ open, onClose, geo, cases, onPick, onLocate 
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="City, region, country or lat, lon"
-          aria-label="Search a place"
+          placeholder={t('City, region, country or lat, lon')}
+          aria-label={t('Search a place')}
         />
         {busy && <span className="search-spin" />}
-        <button className="icon-btn" onClick={onClose} aria-label="Close search">
+        <button className="icon-btn" onClick={onClose} aria-label={t('Close search')}>
           ×
         </button>
       </div>
@@ -159,7 +161,7 @@ export default function SearchBox({ open, onClose, geo, cases, onPick, onLocate 
           <circle cx="12" cy="12" r="4" />
           <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
         </svg>
-        Use my location
+        {t('Use my location')}
       </button>
 
       {results.length > 0 && (
@@ -174,11 +176,11 @@ export default function SearchBox({ open, onClose, geo, cases, onPick, onLocate 
           ))}
         </ul>
       )}
-      {q.trim().length >= 3 && !coords && <button type="button" className="search-online" disabled={busy} onClick={lookup}>{busy ? 'Searching…' : searchError ? 'Retry online search' : 'Search online'}</button>}
-      {searchError && <p className="search-empty" role="status">Online search is unavailable. Local places and coordinates still work.</p>}
-      {searched && !searchError && !busy && !results.length && <p className="search-empty">No places found. Try another spelling or coordinates like “-34.6, -58.4”.</p>}
+      {q.trim().length >= 3 && !coords && <button type="button" className="search-online" disabled={busy} onClick={lookup}>{busy ? t('Searching…') : searchError ? t('Retry online search') : t('Search online')}</button>}
+      {searchError && <p className="search-empty" role="status">{t('Online search is unavailable. Local places and coordinates still work.')}</p>}
+      {searched && !searchError && !busy && !results.length && <p className="search-empty">{t('No places found. Try another spelling or coordinates like “-34.6, -58.4”.')}</p>}
       <p className="search-credit">
-        Place search © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors (Nominatim). Online search sends the entered place name to this service.
+        {t('Place search ©')} <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> {t('contributors (Nominatim). Online search sends the entered place name to this service.')}
       </p>
     </div>
   );

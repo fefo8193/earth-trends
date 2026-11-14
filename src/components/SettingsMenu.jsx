@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LAYER_STYLE } from '../lib/colors.js';
+import { numLocale, t, tf } from '../lib/i18n.js';
 
 const TABS = [
   ['layers', 'Layers'],
@@ -8,7 +9,41 @@ const TABS = [
   ['method', 'Method'],
 ];
 
-const LAYER_SUB = { precip: 'GPM IMERG', temp: 'MERRA-2 T2M', water: 'GRACE/GRACE-FO Mascon', stars: 'MERRA-2 CLDTOT · clear-sky fraction' };
+const LAYER_SUB = { precip: 'GPM IMERG', temp: 'MERRA-2 T2M', water: 'GRACE/GRACE-FO Mascon', stars: 'MERRA-2 CLDTOT' };
+
+const METHOD = [
+  ["What the data describe", [
+    "We compare 2005–2025: 21 annual values spanning 20 years. Rainfall comes from GPM IMERG; temperature and cloud cover come from MERRA-2 reanalysis; water storage comes from GRACE/GRACE-FO. These products describe a grid cell or region, not a measurement at an exact street address.",
+  ]],
+  ["How annual values are built", [
+    "Monthly data are combined using monthly climatology and anomalies, reducing seasonal bias in incomplete years. An annual value needs at least nine valid months for these monthly products. Missing annual observations stay missing in the data, exports and trend calculations. Water has no annual observations for 2015, 2017 and 2018. Its chart bridges internal gaps with faint gray linear estimates, clearly marked “Estimated”; these are visual guides, not NASA observations.",
+  ]],
+  ["How we test a long-term trend", [
+    "The **Hamed–Rao Mann–Kendall test** looks for a sustained upward or downward tendency while adjusting for correlation between observations. We apply **Benjamini–Hochberg false discovery rate (FDR)** correction across the tested cells in each layer. A cell passes when its adjusted q-value is below 0.05.",
+    "A significant result is evidence of a trend under the test assumptions. It is not a 95% probability that the trend is true. “No statistically significant trend” means this test did not find sufficient evidence for this period; it does not prove that nothing changed. The pipeline requires at least ten valid annual observations.",
+  ]],
+  ["Rate and possible change year", [
+    "**Sen’s slope** is the median of the changes between pairs of observations, divided by the actual number of years between them. **Pettitt’s test** examines a possible change in the level of a place’s annual series. Its year and approximate p-value are exploratory; they do not identify a cause, and are not covered by the global Mann–Kendall FDR correction.",
+  ]],
+  ["How to read the globe", [
+    "“Selected year vs. average” compares a year with its 2005–2025 cell average. “20-year trend” shows change per year. The statistical grid is 1°. The 0.25° display grid and smoothing make the map easier to read; they do not add measurement precision. All layers use a light 0.15° Gaussian display smoothing, followed by scalar interpolation before coloring; annual observations, statistical tests and exports are unchanged. Water also retains its land-only mask and its existing GRACE display smoothing. GRACE/GRACE-FO water storage represents broad mascon regions, approximately 3°, and is shown over land only.",
+    "Colors fade toward transparency near the period average or a zero trend, revealing the Earth underneath. Clear patches are not automatically missing data. “Only significant trends” also leaves cells that fail the statistical test uncolored. The red timeline bands mark years without an annual Water value.",
+  ]],
+  ["What Stars means", [
+    "Stars shows clear-sky fraction: 100 × (1 − CLDTOT), from MERRA-2 total cloud cover. It is a cloud-based proxy, not a count of visible stars or a nighttime weather forecast. The light-pollution note uses relative brightness in NASA’s Earth at Night image as a rough visual guide; it is not a calibrated sky-brightness measurement or a 2005–2025 light-pollution trend.",
+  ]],
+  ["Nearby regional comparison", [
+    "The nearby-region reference averages observed 1° cells within 500 km of the sampled cell, weighted by their area. Land is compared with land and ocean with ocean; Water uses land only. Each annual regional mean requires at least five observed cells and 75% of the eligible area. Its Sen slope needs at least ten valid annual means and is descriptive, with no new p-value or significance claim. Chart estimates are excluded.",
+  ]],
+  ["Loading and exports", [
+    "Only the selected layer loads at startup. Opening a place requests the remaining layers for the four charts and complete exports. Compressed binary files preserve the existing frontend arrays exactly; original NASA-derived JSON files remain available in Metadata. No additional quantization is applied.",
+  ]],
+];
+
+/** Texto con **negritas**. */
+function Prose({ text }) {
+  return <p className="prose">{text.split('**').map((part, i) => (i % 2 ? <b key={i}>{part}</b> : part))}</p>;
+}
 
 function Toggle({ label, checked, onChange, hint }) {
   return (
@@ -30,24 +65,24 @@ export default function SettingsMenu({ open, onClose, data, settings, setSetting
   const set = (k) => (v) => setSettings((s) => ({ ...s, [k]: v }));
 
   return (
-    <div className="settings glass" role="dialog" aria-label="Settings">
+    <div className="settings glass" role="dialog" aria-label={t('Settings')}>
       <div className="settings-head">
-        <span>[ SETTINGS ]</span>
-        <button className="icon-btn" onClick={onClose} aria-label="Close settings">
+        <span>[ {t('SETTINGS')} ]</span>
+        <button className="icon-btn" onClick={onClose} aria-label={t('Close settings')}>
           ×
         </button>
       </div>
       <nav className="tabs">
         {TABS.map(([id, label]) => (
           <button key={id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>
-            {label}
+            {t(label)}
           </button>
         ))}
       </nav>
 
       {tab === 'layers' && (
         <div className="settings-body">
-          <h5>Globe layer</h5>
+          <h5>{t('Globe layer')}</h5>
           <div className="layer-list">
             {meta.layers.map((l) => (
               <button
@@ -60,41 +95,42 @@ export default function SettingsMenu({ open, onClose, data, settings, setSetting
                 <span>
                   <b>{LAYER_STYLE[l.id].name}</b>
                   <small>
-                    {LAYER_SUB[l.id]} · {l.source === 'mock' ? 'TEST DATA' : 'NASA'}
+                    {LAYER_SUB[l.id]} · {l.source === 'mock' ? t('TEST DATA') : 'NASA'}
                   </small>
                 </span>
               </button>
             ))}
           </div>
-          <h5>Globe colors show</h5>
+          <p className="layer-about">{LAYER_STYLE[activeLayer]?.about}</p>
+          <h5>{t('Globe colors show')}</h5>
           <div className="seg">
             <button className={settings.colorMode === 'anomaly' ? 'on' : ''} onClick={() => set('colorMode')('anomaly')}>
-              Selected year vs. average
+              {t('Selected year vs. average')}
             </button>
             <button className={settings.colorMode === 'trend' ? 'on' : ''} onClick={() => set('colorMode')('trend')}>
-              20-year trend
+              {t('20-year trend')}
             </button>
           </div>
-          <Toggle label="Only significant trends" hint="Hide cells that do not pass the statistical test after FDR correction" checked={settings.sigOnly} onChange={set('sigOnly')} />
-          <Toggle label="Land only" checked={settings.landOnly} onChange={set('landOnly')} />
-          <Toggle label="Auto-rotate globe" checked={settings.autoRotate} onChange={set('autoRotate')} />
-          <Toggle label="Example pins on the globe" checked={settings.showCases} onChange={set('showCases')} />
+          <Toggle label={t('Only significant trends')} hint={t('Hide cells that do not pass the statistical test after FDR correction')} checked={settings.sigOnly} onChange={set('sigOnly')} />
+          <Toggle label={t('Land only')} checked={settings.landOnly} onChange={set('landOnly')} />
+          <Toggle label={t('Auto-rotate globe')} checked={settings.autoRotate} onChange={set('autoRotate')} />
+          <Toggle label={t('Example pins on the globe')} checked={settings.showCases} onChange={set('showCases')} />
           <button className="tour-again" onClick={onTour}>
-            ▶ Replay the guided example
+            ▶ {t('Replay the guided example')}
           </button>
         </div>
       )}
 
       {tab === 'cases' && (
         <div className="settings-body">
-          <h5>{cases.length} example comparisons</h5>
+          <h5>{t('{n} example comparisons', { n: cases.length })}</h5>
           <div className="case-list">
             {cases.map((c, i) => (
               <button key={c.id} className="case-btn" onClick={() => onCase(c.id)} style={{ '--accent': LAYER_STYLE[c.layer]?.accent }}>
                 <span className="num">{String(i + 1).padStart(2, '0')}</span>
                 <span>
-                  <b>{c.title}</b>
-                  <small>{c.summary}</small>
+                  <b>{tf(c, 'title')}</b>
+                  <small>{tf(c, 'summary')}</small>
                 </span>
                 <span className="chip">{LAYER_STYLE[c.layer]?.short}</span>
               </button>
@@ -112,50 +148,50 @@ export default function SettingsMenu({ open, onClose, data, settings, setSetting
               <div key={l.id} className="meta-card">
                 <div className="meta-title">
                   <b style={{ color: LAYER_STYLE[l.id].accent }}>{LAYER_STYLE[l.id].name}</b>
-                  <span className={`src ${l.source}`}>{l.source === 'mock' ? 'TEST DATA' : 'REAL NASA DATA'}</span>
+                  <span className={`src ${l.source}`}>{l.source === 'mock' ? t('TEST DATA') : t('REAL NASA DATA')}</span>
                 </div>
                 <dl>
-                  <dt>Product</dt>
+                  <dt>{t('Product')}</dt>
                   <dd>{L.product}</dd>
-                  <dt>Units</dt>
+                  <dt>{t('Units')}</dt>
                   <dd>{LAYER_STYLE[l.id].units}</dd>
-                  <dt>Period</dt>
+                  <dt>{t('Period')}</dt>
                   <dd>
-                    {L.years[0]}–{L.years[L.years.length - 1]} ({L.years.length} annual values)
+                    {L.years[0]}–{L.years[L.years.length - 1]} ({t('{n} annual values', { n: L.years.length })})
                   </dd>
-                  <dt>Grid</dt>
+                  <dt>{t('Grid')}</dt>
                   <dd>
-                    {L.grid.res}° · {L.grid.nlat}×{L.grid.nlon} cells
+                    {L.grid.res}° · {L.grid.nlat}×{L.grid.nlon} {t('cells')}
                   </dd>
-                  <dt>Map display</dt>
-                  <dd>{L.viz?.res || L.grid.res}° visual grid; display detail does not increase measurement resolution.</dd>
-                  {l.id === 'water' && <><dt>Coverage</dt><dd>Land only. No annual observations for 2015, 2017 or 2018. GRACE mascons represent broad regions, approximately 3°.</dd></>}
-                  {l.id === 'stars' && <><dt>Meaning</dt><dd>Clear-sky fraction from cloud cover; a proxy for star visibility, not an observation of stars.</dd></>}
-                  <dt>Test</dt>
+                  <dt>{t('Map display')}</dt>
+                  <dd>{L.viz?.res || L.grid.res}° {t('visual grid; display detail does not increase measurement resolution.')}</dd>
+                  {l.id === 'water' && <><dt>{t('Coverage')}</dt><dd>{t('Land only. No annual observations for 2015, 2017 or 2018. GRACE mascons represent broad regions, approximately 3°.')}</dd></>}
+                  {l.id === 'stars' && <><dt>{t('Meaning')}</dt><dd>{t('Clear-sky fraction from cloud cover; a proxy for star visibility, not an observation of stars.')}</dd></>}
+                  <dt>{t('Test')}</dt>
                   <dd>
                     Mann-Kendall ({L.mk.test}){L.mk.fdr ? ' + Benjamini-Hochberg FDR' : ''} · α = {L.mk.alpha}
                   </dd>
-                  <dt>Cells</dt>
-                  <dd>{L.stats ? <>{L.stats.cellsWithData.toLocaleString('en')} with data · ↑{L.stats.cellsUp} ↓{L.stats.cellsDown} significant</> : <button type="button" className="metadata-load" onClick={() => setActiveLayer(l.id)}>Load layer statistics</button>}</dd>
-                  <dt>Generated</dt>
-                  <dd>{new Date(L.generatedAt).toLocaleString('en')}</dd>
-                  <dt>Download</dt>
+                  <dt>{t('Cells')}</dt>
+                  <dd>{L.stats ? <>{L.stats.cellsWithData.toLocaleString(numLocale())} {t('with data')} · ↑{L.stats.cellsUp} ↓{L.stats.cellsDown} {t('significant')}</> : <button type="button" className="metadata-load" onClick={() => setActiveLayer(l.id)}>{t('Load layer statistics')}</button>}</dd>
+                  <dt>{t('Generated')}</dt>
+                  <dd>{new Date(L.generatedAt).toLocaleString(numLocale())}</dd>
+                  <dt>{t('Download')}</dt>
                   <dd>
                     <a className="dl" href={`${import.meta.env.BASE_URL}data/${l.file}`} download>
-                      ↓ Full global grid (JSON)
+                      ↓ {t('Full global grid (JSON)')}
                     </a>
                     {L.viz?.trend && (
                       <>
                         {' · '}
                         <a className="dl" href={`${import.meta.env.BASE_URL}data/${L.viz.trend}`} download>
-                          ↓ Trend map (PNG)
+                          ↓ {t('Trend map (PNG)')}
                         </a>
                       </>
                     )}
                   </dd>
                   {L.ingest?.files && (
                     <>
-                      <dt>Files</dt>
+                      <dt>{t('Files')}</dt>
                       <dd className="files">{L.ingest.files.join(', ')}</dd>
                     </>
                   )}
@@ -163,7 +199,7 @@ export default function SettingsMenu({ open, onClose, data, settings, setSetting
               </div>
             );
           })}
-          <h5>Sources</h5>
+          <h5>{t('Sources')}</h5>
           <ul className="sources">
             {meta.sources.map((s) => (
               <li key={s.name}>
@@ -178,62 +214,22 @@ export default function SettingsMenu({ open, onClose, data, settings, setSetting
 
       {tab === 'method' && (
         <div className="settings-body">
-          <h5>What the data describe</h5>
-          <p className="prose">
-            We compare 2005–2025: 21 annual values spanning 20 years. Rainfall comes from GPM IMERG;
-            temperature and cloud cover come from MERRA-2 reanalysis; water storage comes from GRACE/GRACE-FO.
-            These products describe a grid cell or region, not a measurement at an exact street address.
-          </p>
-          <h5>How annual values are built</h5>
-          <p className="prose">
-            Monthly data are combined using monthly climatology and anomalies, reducing seasonal bias in incomplete years.
-            An annual value needs at least nine valid months for these monthly products. Missing annual observations stay missing in the data, exports and trend calculations. Water has no annual observations
-            for 2015, 2017 and 2018. Its chart bridges internal gaps with faint gray linear estimates, clearly marked
-            “Estimated”; these are visual guides, not NASA observations.
-          </p>
-          <h5>How we test a long-term trend</h5>
-          <p className="prose">
-            The <b>Hamed–Rao Mann–Kendall test</b> looks for a sustained upward or downward tendency while adjusting for
-            correlation between observations. We apply <b>Benjamini–Hochberg false discovery rate (FDR)</b> correction across
-            the tested cells in each layer. A cell passes when its adjusted q-value is below 0.05.
-          </p>
-          <p className="prose">
-            A significant result is evidence of a trend under the test assumptions. It is not a 95% probability that the
-            trend is true. “No statistically significant trend” means this test did not find sufficient evidence for this
-            period; it does not prove that nothing changed. The pipeline requires at least ten valid annual observations.
-          </p>
-          <h5>Rate and possible change year</h5>
-          <p className="prose">
-            <b>Sen’s slope</b> is the median of the changes between pairs of observations, divided by the actual number
-            of years between them. <b>Pettitt’s test</b> examines a possible change in the level of a place’s annual series.
-            Its year and approximate p-value are exploratory; they do not identify a cause, and are not covered by the
-            global Mann–Kendall FDR correction.
-          </p>
-          <h5>How to read the globe</h5>
-          <p className="prose">
-            “Selected year vs. average” compares a year with its 2005–2025 cell average. “20-year trend” shows change per year.
-            The statistical grid is 1°. The 0.25° display grid and smoothing make the map easier to read; they do not add
-            measurement precision. All layers use a light 0.15° Gaussian display smoothing, followed by scalar
-            interpolation before coloring; annual observations, statistical tests and exports are unchanged. Water also retains its land-only mask and its existing GRACE display smoothing. GRACE/GRACE-FO water storage represents broad mascon regions, approximately 3°, and is
-            shown over land only.
-          </p>
-          <p className="prose">
-            Colors fade toward transparency near the period average or a zero trend, revealing the Earth underneath.
-            Clear patches are not automatically missing data. “Only significant trends” also leaves cells that fail the
-            statistical test uncolored. The red timeline bands mark years without an annual Water value.
-          </p>
-          <h5>What Stars means</h5>
-          <p className="prose">
-            Stars shows clear-sky fraction: 100 × (1 − CLDTOT), from MERRA-2 total cloud cover. It is a cloud-based proxy,
-            not a count of visible stars or a nighttime weather forecast. The light-pollution note uses relative brightness
-            in NASA’s Earth at Night image as a rough visual guide; it is not a calibrated sky-brightness measurement or
-            a 2005–2025 light-pollution trend.
-          </p>
-          <h5>Nearby regional comparison</h5>
-          <p className="prose">The nearby-region reference averages observed 1° cells within 500 km of the sampled cell, weighted by their area. Land is compared with land and ocean with ocean; Water uses land only. Each annual regional mean requires at least five observed cells and 75% of the eligible area. Its Sen slope needs at least ten valid annual means and is descriptive, with no new p-value or significance claim. Chart estimates are excluded.</p>
-          <h5>Loading and exports</h5>
-          <p className="prose">Only the selected layer loads at startup. Opening a place requests the remaining layers for the four charts and complete exports. Compressed binary files preserve the existing frontend arrays exactly; original NASA-derived JSON files remain available in Metadata. No additional quantization is applied.</p>
-          <h5>Products and references</h5>
+          <h5>{t('What each variable means')}</h5>
+          <dl className="var-defs">
+            {meta.layers.map((l) => (
+              <React.Fragment key={l.id}>
+                <dt style={{ color: LAYER_STYLE[l.id].accent }}>{LAYER_STYLE[l.id].name}</dt>
+                <dd>{LAYER_STYLE[l.id].about}</dd>
+              </React.Fragment>
+            ))}
+          </dl>
+          {METHOD.map(([h, ps]) => (
+            <React.Fragment key={h}>
+              <h5>{t(h)}</h5>
+              {ps.map((x) => <Prose key={x} text={t(x)} />)}
+            </React.Fragment>
+          ))}
+          <h5>{t('Products and references')}</h5>
           <ul className="sources">
             <li><a href="https://disc.gsfc.nasa.gov/datasets/GPM_3IMERGM_07/summary" target="_blank" rel="noreferrer">GPM IMERG Final Monthly · GPM_3IMERGM v07</a></li>
             <li><a href="https://disc.gsfc.nasa.gov/datasets/M2TMNXSLV_5.12.4/summary" target="_blank" rel="noreferrer">MERRA-2 M2TMNXSLV v5.12.4 · T2M</a></li>
@@ -241,15 +237,15 @@ export default function SettingsMenu({ open, onClose, data, settings, setSetting
             <li><a href="https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4" target="_blank" rel="noreferrer">GRACE/GRACE-FO JPL Mascon RL06.3 v04 CRI</a></li>
             <li><a href="https://earthobservatory.nasa.gov/features/NightLights" target="_blank" rel="noreferrer">NASA Earth at Night · supplementary brightness guide</a></li>
             <li><a href="https://doi.org/10.1016/S0022-1694(97)00125-X" target="_blank" rel="noreferrer">Hamed &amp; Rao (1998) · modified Mann–Kendall test</a></li>
-            <li>Background sky: Yale Bright Star Catalog and constellation lines via d3-celestial (BSD-3), rotated with sidereal time.</li>
+            <li>{t('Background sky: Yale Bright Star Catalog and constellation lines via d3-celestial (BSD-3), rotated with sidereal time.')}</li>
           </ul>
-          <h5>Shortcuts</h5>
+          <h5>{t('Shortcuts')}</h5>
           <ul className="devlist">
             <li>
-              <kbd>Space</kbd> play/pause · <kbd>←</kbd>
-              <kbd>→</kbd> year · <kbd>1</kbd>
+              <kbd>Space</kbd> {t('play/pause')} · <kbd>←</kbd>
+              <kbd>→</kbd> {t('year')} · <kbd>1</kbd>
               <kbd>2</kbd>
-              <kbd>3</kbd> modes · <kbd>Esc</kbd> close
+              <kbd>3</kbd> {t('modes')} · <kbd>Esc</kbd> {t('close')}
             </li>
           </ul>
         </div>

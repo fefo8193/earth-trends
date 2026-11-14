@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { t } from '../lib/i18n.js';
 import { nearestYear, magneticYear, yearGroups, yearGroupLabel } from '../lib/timeline.js';
 
 export default function Timeline({ years, year, onYear, missingYears = [], children }) {
@@ -123,7 +124,7 @@ export default function Timeline({ years, year, onYear, missingYears = [], child
               style={{ left: `${pct(g.start - 0.5)}%`, width: `${pct(g.end + 0.5) - pct(g.start - 0.5)}%` }} />
           ))}
           <input ref={inputRef} className="timeline-input" type="range" min={y0} max={y1} step="any" defaultValue={year}
-            aria-label="Year" aria-valuetext={`${year}${missing ? ', no annual data' : ''}`}
+            aria-label={t('Year')} aria-valuetext={`${year}${missing ? `, ${t('no annual data')}` : ''}`}
             onPointerDown={(e) => {
               if (e.button !== 0) return;
               e.preventDefault();

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { estimateInternalGaps } from '../lib/chartEstimates.js';
 import { fmtValue } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const VW = 300;
 const VH = 84;
@@ -76,7 +77,7 @@ export function TrendChart({ layerId, data, kind, color, year, onHoverYear }) {
           onHoverYear?.(null);
         }}
         role="img"
-        aria-label={`Series ${layerId} ${series[0].year}–${series[n - 1].year}${estimates?.bridges.length ? ". Gray dashed segments are estimated, not observed." : ""}`}
+        aria-label={`${t('Series')} ${layerId} ${series[0].year}–${series[n - 1].year}${estimates?.bridges.length ? `. ${t('Gray dashed segments are estimated, not observed.')}` : ''}`}
       >
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
@@ -120,7 +121,7 @@ export function TrendChart({ layerId, data, kind, color, year, onHoverYear }) {
         {estimates?.bridges.map((points, k) => {
           const coords = points.map(p => [cx(p.index), y(p.v)]);
           return <g key={`estimated-${k}`} className="chart-estimate">
-            <title>Linear estimate between observed years; excluded from trend tests and exports.</title>
+            <title>{t('Linear estimate between observed years; excluded from trend tests and exports.')}</title>
             <path className="estimate-area" d={`M${coords[0][0]},${VH} L${coords.map(p => p.join(',')).join(' L')} L${coords[coords.length - 1][0]},${VH} Z`} />
             <path className="estimate-line" d={`M${coords.map(p => p.join(',')).join(' L')}`} vectorEffect="non-scaling-stroke" />
             {points.filter(p => p.estimated).map(p => <circle key={p.year} cx={cx(p.index)} cy={y(p.v)} r="1.5" />)}
@@ -138,12 +139,12 @@ export function TrendChart({ layerId, data, kind, color, year, onHoverYear }) {
         )}
         {hi_i >= 0 && <line x1={cx(hi_i)} x2={cx(hi_i)} y1="0" y2={VH} className="cursor" vectorEffect="non-scaling-stroke" />}
       </svg>
-      {estimates?.bridges.length > 0 && <span className="estimate-key" title="Linear interpolation for display only; original data and statistical tests keep these years missing.">Gray dashed: estimated</span>}
+      {estimates?.bridges.length > 0 && <span className="estimate-key" title={t('Linear interpolation for display only; original data and statistical tests keep these years missing.')}>{t('Gray dashed: estimated')}</span>}
       {shown && (
         <div className={`chart-readout ${shown.estimated ? 'is-estimated' : ''}`}>
           <span>{shown.year}</span>
           <b>{fmtValue(layerId, shown.v)}</b>
-          {shown.estimated && <span>Estimated</span>}
+          {shown.estimated && <span>{t('Estimated')}</span>}
         </div>
       )}
     </div>

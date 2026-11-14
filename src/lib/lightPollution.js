@@ -1,5 +1,7 @@
 // Contaminación lumínica aproximada a partir de la imagen nocturna de NASA (Black Marble / Earth at Night).
 // Se muestrea el brillo medio alrededor del punto y se clasifica en niveles tipo escala de cielo oscuro.
+import { t } from './i18n.js';
+
 const SRC = `${import.meta.env.BASE_URL}assets/earth-night.jpg`;
 let ready = null;
 let px = null;
@@ -56,5 +58,5 @@ export function lightPollutionAt(lat, lon) {
   const v = s / n;
   const i = LEVELS.findIndex(([t]) => v < t);
   const [, label, detail] = LEVELS[i < 0 ? LEVELS.length - 1 : i];
-  return { level: i, label, detail, value: Math.round(v) };
+  return { level: i, label: t(label), detail: t(detail), value: Math.round(v) };
 }

@@ -1,5 +1,6 @@
 // Países (Natural Earth 110m) para nombrar lugares, máscara tierra/océano y contornos del globo.
 import { geoArea, geoBounds, geoContains } from 'd3-geo';
+import { countryName, t } from './i18n.js';
 
 
 function rewind(feature) {
@@ -19,12 +20,20 @@ export async function loadGeo({ signal } = {}) {
   const features = fc.features.map(rewind);
   const items = features.map((f) => {
     const [[x0, y0], [x1, y1]] = geoBounds(f);
-    const name = f.properties.NAME || f.properties.ADMIN;
+    const nameEn = f.properties.NAME || f.properties.ADMIN;
+    const iso = f.properties.ISO_A2;
+    const continentEn = f.properties.CONTINENT === 'Seven seas (open ocean)' ? 'Ocean' : f.properties.CONTINENT;
     return {
       feature: f,
-      name,
+      nameEn,
+      // Nombre y continente en el idioma activo (el inglés queda en nameEn / continent)
+      get name() {
+        return countryName(iso, nameEn);
+      },
       continent: f.properties.CONTINENT,
-      continentLabel: f.properties.CONTINENT === 'Seven seas (open ocean)' ? 'Ocean' : f.properties.CONTINENT,
+      get continentLabel() {
+        return t(continentEn);
+      },
       bbox: [x0, y0, x1, y1],
     };
   });
@@ -84,9 +93,9 @@ export async function loadGeo({ signal } = {}) {
 }
 
 function oceanName(lat, lon) {
-  if (lat < -60) return 'Southern Ocean';
-  if (lat > 66) return 'Arctic Ocean';
-  if (lon > -70 && lon < 20) return 'Atlantic Ocean';
-  if (lon >= 20 && lon < 120 && lat < 25) return 'Indian Ocean';
-  return 'Pacific Ocean';
+  if (lat < -60) return t('Southern Ocean');
+  if (lat > 66) return t('Arctic Ocean');
+  if (lon > -70 && lon < 20) return t('Atlantic Ocean');
+  if (lon >= 20 && lon < 120 && lat < 25) return t('Indian Ocean');
+  return t('Pacific Ocean');
 }

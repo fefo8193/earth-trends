@@ -5,6 +5,7 @@ import { fmtCoord } from '../lib/format.js';
 import { createGlobeMaterial, installGlobeFx } from '../lib/globeFx.js';
 import { adaptEarthTextures } from '../lib/textureQuality.js';
 import { createFlightLock } from '../lib/cameraFlight.js';
+import { t, tf } from '../lib/i18n.js';
 import { cameraLatitude, installNavigationGuard } from '../lib/globeNavigation.js';
 
 function useWindowSize() {
@@ -37,7 +38,7 @@ function pinElement(d, onCaseClick) {
 }
 
 const GlobeView = forwardRef(function GlobeView(
-  { texture, overlayTexture, textureController, playIntro = true, placeA, placeB, cases, showCases, autoRotate, cinematic, onGlobeClick, onCaseClick, shifted },
+  { texture, overlayTexture, textureController, playIntro = true, placeA, placeB, cases, showCases, autoRotate, cinematic, onGlobeClick, onCaseClick, shifted, lang },
   ref,
 ) {
   const globeRef = useRef();
@@ -142,12 +143,12 @@ const GlobeView = forwardRef(function GlobeView(
     if (showCases) {
       for (const c of cases) {
         for (const s of ['a', 'b']) {
-          arr.push({ kind: 'case', lat: c[s].lat, lng: c[s].lon, label: `${c[s].name} — example: ${c.title}`, caseId: c.id, id: `${c.id}-${s}` });
+          arr.push({ kind: 'case', lat: c[s].lat, lng: c[s].lon, label: `${c[s].name} — ${t('example')}: ${tf(c, 'title')}`, caseId: c.id, id: `${c.id}-${s}-${lang}` });
         }
       }
     }
     return arr;
-  }, [placeA, placeB, cases, showCases]);
+  }, [placeA, placeB, cases, showCases, lang]);
 
   const rings = useMemo(() => {
     const r = [];

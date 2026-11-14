@@ -20,13 +20,14 @@ import { findOpposite } from './lib/mirror.js';
 import { greatCircleKm, midpoint } from './lib/stats.js';
 import { LAYER_STYLE, legendGradient } from './lib/colors.js';
 import { plainTrend } from './lib/format.js';
+import { LANGS, getLang, saveLang, setLang, t, tf } from './lib/i18n.js';
 
 const MODES = [
   ['explore', 'ONE PLACE', 'Click a spot to see its 20-year trend'],
   ['versus', 'COMPARE', 'Pick two places and compare them side by side'],
   ['opposite', 'MIRROR', 'Click a spot and we find a place changing the opposite way'],
 ];
-const MODE_OPTIONS = MODES.map(([id, label, description]) => ({ id, label, description }));
+const modeOptions = () => MODES.map(([id, label, description]) => ({ id, label: t(label), description: t(description) }));
 const MIRROR_TAG = 'climate mirror';
 
 let uid = 0;
@@ -38,7 +39,16 @@ export default function App() {
   const [data, setData] = useState(null);
   const [geo, setGeo] = useState(null);
   const [tex, setTex] = useState(null);
-  const [progress, setProgress] = useState('Loading NASA climate data…');
+  const [progress, setProgress] = useState(() => t('Loading NASA climate data…'));
+  const [lang, setLangState] = useState(getLang);
+  const [langOpen, setLangOpen] = useState(false);
+  const MODE_OPTIONS = useMemo(modeOptions, [lang]);
+  const changeLang = useCallback((l) => {
+    setLang(l);
+    saveLang(l);
+    setLangState(l);
+    setLangOpen(false);
+  }, []);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const store = useRef(null);
   const mirrorRequest = useRef(0);
@@ -83,7 +93,7 @@ export default function App() {
     const controller = new AbortController();
     restored.current = false;
     setError(null); setData(null); setTex(null); setGeoReady(false);
-    setProgress('Loading NASA climate data…');
+    setProgress(t('Loading NASA climate data…'));
     (async () => {
       try {
         const [catalog, g] = await Promise.all([
@@ -93,15 +103,15 @@ export default function App() {
         ownedStore = createLayerStore(catalog, loadLayer); store.current = ownedStore;
         const requested = readShareState()?.layer;
         const first = catalog.meta.layers.some(l => l.id === requested) ? requested : catalog.meta.layers[0].id;
-        setProgress(`Loading ${LAYER_STYLE[first].short}…`);
-        const texturePromise = createGlobeTexture(g).then(t => {
-          if (!alive || controller.signal.aborted) { t.dispose(); return null; }
-          ownedTexture = t; return t;
+        setProgress(t('Loading {name}…', { name: LAYER_STYLE[first].short }));
+        const texturePromise = createGlobeTexture(g).then(gt => {
+          if (!alive || controller.signal.aborted) { gt.dispose(); return null; }
+          ownedTexture = gt; return gt;
         });
-        const [L, t] = await Promise.all([ownedStore.ensure(first), texturePromise]);
-        if (!alive || !t) return;
+        const [L, globeTex] = await Promise.all([ownedStore.ensure(first), texturePromise]);
+        if (!alive || !globeTex) return;
         unsubscribe = ownedStore.subscribe(snapshot => { if (alive) setData(snapshot); });
-        setData(ownedStore.snapshot()); setGeo(g); setTex(t);
+        setData(ownedStore.snapshot()); setGeo(g); setTex(globeTex);
         setActiveLayer(first); setYearIdx(L.years.length - 1);
         const idle = window.requestIdleCallback || (fn => setTimeout(fn, 100));
         idle(async () => {
@@ -141,7 +151,7 @@ export default function App() {
   const missingYears = useMemo(() => activeLayer === 'water' ? unavailableYears(layer) : [], [layer, activeLayer]);
   const layerOptions = useMemo(() => (data?.meta.layers || []).map((l) => ({
     id: l.id, label: LAYER_STYLE[l.id].short, accent: LAYER_STYLE[l.id].accent,
-  })), [data?.meta]);
+  })), [data?.meta, lang]);
 
   // ---- Textura del globo ---------------------------------------------------
   useEffect(() => {
@@ -187,7 +197,7 @@ export default function App() {
         lon,
         name: label,
         sub: null,
-        note: `${desc.continentLabel || 'Ocean'} · data from the nearest ${layer?.grid.res || data.meta.grid.res}° grid cell`,
+        note: t('{c} · data from the nearest {r}° grid cell', { c: desc.continentLabel || t('Ocean'), r: layer?.grid.res || data.meta.grid.res }),
       };
     },
     [geo, data, layer],
@@ -208,15 +218,15 @@ export default function App() {
       await geo.prepareLandMask(L.grid, () => request !== mirrorRequest.current);
       if (request !== mirrorRequest.current) return;
       const opp = findOpposite(L, a, placeLayerData(L, a.lat, a.lon), geo);
-      if (!opp) { flash('No place with the opposite trend was found for this layer.'); return; }
+      if (!opp) { flash(t('No place with the opposite trend was found for this layer.')); return; }
       const b = makePlace(opp.lat, opp.lon, opp.country);
-      b.sub = `Strongest opposite ${LAYER_STYLE[layerId].noun} trend on another part of the planet`;
+      b.sub = t('Strongest opposite {noun} trend on another part of the planet', { noun: LAYER_STYLE[layerId].noun });
       setPlaceB(b); setTagB(MIRROR_TAG);
-      if (opp.anyDirection) flash('Place A has no clear trend, so we show the strongest contrast on the planet.');
+      if (opp.anyDirection) flash(t('Place A has no clear trend, so we show the strongest contrast on the planet.'));
       globe.current?.holdNavigation(3100);
       globe.current?.flyTo(b.lat, b.lon, 2.2, 1100);
       mirrorFlightTimer.current = setTimeout(() => { if (request === mirrorRequest.current) flyPair(a, b); }, 1250);
-    } catch { if (request === mirrorRequest.current) flash('Could not load this comparison. Retry the layer.'); }
+    } catch { if (request === mirrorRequest.current) flash(t('Could not load this comparison. Retry the layer.')); }
   }, [activeLayer, geo, makePlace, flyPair, flash]);
 
   const retryLayer = useCallback(async id => {
@@ -277,7 +287,7 @@ export default function App() {
       setTour(null);
       setTouched(true);
       setExamplesOpen(false);
-      flash(`Example: ${c.title}. ${c.summary}`);
+      flash(`${t('Example')}: ${tf(c, 'title')}. ${tf(c, 'summary')}`);
       flyPair(a, b);
     },
     [data, placeA, makePlace, flyPair, flash],
@@ -285,23 +295,23 @@ export default function App() {
 
   const locate = useCallback(() => {
     if (!navigator.geolocation) {
-      flash('Your browser cannot share its location. Try searching instead.');
+      flash(t('Your browser cannot share its location. Try searching instead.'));
       return;
     }
-    flash('Finding your location…');
+    flash(t('Finding your location…'));
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setToast(null);
-        handleGlobeClick(pos.coords.latitude, pos.coords.longitude, 'My location');
+        handleGlobeClick(pos.coords.latitude, pos.coords.longitude, t('My location'));
       },
       (err) => {
         const why =
           err.code === 1
-            ? 'Location access is blocked for this site. Allow location in your browser permissions, or search for a city instead.'
+            ? t('Location access is blocked for this site. Allow location in your browser permissions, or search for a city instead.')
             : err.code === 3
-              ? 'Finding your location took too long.'
-              : 'Your device could not determine its location right now (no Wi-Fi/GPS fix).';
-        flash(`${why}${err.code === 1 ? '' : ' Search for your city instead.'}`, 7000);
+              ? t('Finding your location took too long.')
+              : t('Your device could not determine its location right now (no Wi-Fi/GPS fix).');
+        flash(`${why}${err.code === 1 ? '' : ` ${t('Search for your city instead.')}`}`, 7000);
         setSearchOpen(true);
       },
       { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 },
@@ -310,7 +320,7 @@ export default function App() {
 
   const shareLink = useCallback(async () => {
     const ok = await copyLink();
-    flash(ok ? 'Link copied. Anyone who opens it sees exactly this view.' : 'Could not copy. Copy the address bar instead.');
+    flash(ok ? t('Link copied. Anyone who opens it sees exactly this view.') : t('Could not copy. Copy the address bar instead.'));
   }, [flash]);
 
   // ---- Enlace compartible: restaurar desde la URL una sola vez ---------------
@@ -414,7 +424,7 @@ export default function App() {
     mirrorRequest.current++; clearTimeout(mirrorFlightTimer.current);
     setSettings(s => ({ ...s, autoRotate: false })); setActiveLayer(tourCase.layer);
     try { await store.current.ensure(tourCase.layer); setYearIdx(years.length - 1); goTourStep(0); }
-    catch { flash('The example could not load. Retry its layer and start the tour again.'); }
+    catch { flash(t('The example could not load. Retry its layer and start the tour again.')); }
   }, [tourCase, years.length, goTourStep, flash]);
 
   const endTour = useCallback(() => {
@@ -440,27 +450,33 @@ export default function App() {
     const span = `${L.years[0]}–${L.years[L.years.length - 1]}`;
     return [
       {
-        title: `This is ${tourCase.a.name}`,
-        body: `The place panel shows ${L.years.length} years of NASA satellite data for this spot (${span}). Each ${
-          st.chart === 'bars' ? 'bar' : 'point'
-        } is one year of ${st.noun}. The globe shows the selected year relative to each cell’s average, or its long-term trend.`,
+        title: t('This is {name}', { name: tourCase.a.name }),
+        body: t(
+          st.chart === 'bars'
+            ? 'The place panel shows {n} years of NASA satellite data for this spot ({span}). Each bar is one year of {noun}. The globe shows the selected year relative to each cell’s average, or its long-term trend.'
+            : 'The place panel shows {n} years of NASA satellite data for this spot ({span}). Each point is one year of {noun}. The globe shows the selected year relative to each cell’s average, or its long-term trend.',
+          { n: L.years.length, span, noun: st.noun },
+        ),
       },
       {
-        title: 'Real trend, or just noise?',
+        title: t('Real trend, or just noise?'),
         body: dA?.sig
-          ? `${hA}. The dashed line on the chart is the trend. A statistical test (Mann-Kendall, with FDR correction) found evidence of a sustained change, so the green label under the headline says "Evidence of a long-term trend".`
-          : `Rain and temperature go up and down every year. The dashed line is the trend, and a statistical test checks for evidence of a sustained change. For this period: ${hA.toLowerCase()} — this test did not find sufficient evidence of a trend.`,
+          ? t('{h}. The dashed line on the chart is the trend. A statistical test (Mann-Kendall, with FDR correction) found evidence of a sustained change, so the green label under the headline says "Evidence of a long-term trend".', { h: hA })
+          : t('Rain and temperature go up and down every year. The dashed line is the trend, and a statistical test checks for evidence of a sustained change. For this period: {h} — not enough evidence yet to call it a long-term trend.', { h: hA.toLowerCase() }),
       },
       {
-        title: `Now compare with ${tourCase.b.name}`,
-        body: `${tourCase.b.name}: ${hB.charAt(0).toLowerCase()}${hB.slice(1)}. The arc links both places. COMPARE mode lets you put any two places side by side, and MIRROR mode finds a place changing the opposite way for you.`,
+        title: t('Now compare with {name}', { name: tourCase.b.name }),
+        body: t('{name}: {h}. The arc links both places. COMPARE mode lets you put any two places side by side, and MIRROR mode finds a place changing the opposite way for you.', {
+          name: tourCase.b.name,
+          h: `${hB.charAt(0).toLowerCase()}${hB.slice(1)}`,
+        }),
       },
       {
-        title: 'Your turn!',
-        body: 'Click anywhere on the planet (your city, a desert, a rainforest) to see its trend. You can also press Space to watch the years go by, or open Examples in the top-right corner.',
+        title: t('Your turn!'),
+        body: t('Click anywhere on the planet (your city, a desert, a rainforest) to see its trend. You can also press Space to watch the years go by, or open Examples in the top-right corner.'),
       },
     ];
-  }, [tourCase, tourPlaces, data, activeLayer]);
+  }, [tourCase, tourPlaces, data, activeLayer, lang]);
 
   // ---- Celular: tamaño de pantalla y hoja de lugares -------------------------
   useEffect(() => {
@@ -511,7 +527,8 @@ export default function App() {
       else if (e.key === '2') changeMode('versus');
       else if (e.key === '3') changeMode('opposite');
       else if (e.key === 'Escape') {
-        if (searchOpen) setSearchOpen(false);
+        if (langOpen) setLangOpen(false);
+        else if (searchOpen) setSearchOpen(false);
         else if (tour != null) endTour();
         else if (examplesOpen) setExamplesOpen(false);
         else if (welcome) setWelcome(false);
@@ -525,7 +542,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [years.length, changeMode, settingsOpen, tour, welcome, endTour, examplesOpen, searchOpen]);
+  }, [years.length, changeMode, settingsOpen, tour, welcome, endTour, examplesOpen, searchOpen, langOpen]);
 
   // ---- Render --------------------------------------------------------------
   if (error) return <ErrorScreen onRetry={() => setLoadAttempt(n => n + 1)} />;
@@ -534,7 +551,7 @@ export default function App() {
   const legendSource = layer || entry;
   const legendScale = legendSource
     ? settings.colorMode === 'trend'
-      ? `±${(legendSource.viz?.trendScale ?? legendSource.stats?.slopeAbsP95 ?? 0).toFixed(activeLayer === 'temp' ? 3 : 1)} ${activeLayer === 'precip' ? 'mm/yr per year' : activeLayer === 'temp' ? '°C/yr' : activeLayer === 'water' ? 'cm/yr' : 'pts/yr'}`
+      ? `±${(legendSource.viz?.trendScale ?? legendSource.stats?.slopeAbsP95 ?? 0).toFixed(activeLayer === 'temp' ? 3 : 1)} ${t(activeLayer === 'precip' ? 'mm/yr per year' : activeLayer === 'temp' ? '°C/yr' : activeLayer === 'water' ? 'cm/yr' : 'pts/yr')}`
       : `±${(legendSource.viz?.anomScale ?? legendSource.stats?.anomAbsP95 ?? 0).toFixed(activeLayer === 'temp' ? 2 : 0)} ${style.units}`
     : '';
 
@@ -566,6 +583,7 @@ export default function App() {
           cinematic={false}
           onGlobeClick={handleGlobeClick}
           onCaseClick={applyCase}
+          lang={lang}
         />
       )}
 
@@ -575,7 +593,7 @@ export default function App() {
           <b>Earth<span>Trends</span></b>
         </div>
 
-        <LiquidTabs className="modes glass" label="Mode" options={MODE_OPTIONS} value={mode} onChange={changeMode} />
+        <LiquidTabs className="modes glass" label={t('Mode')} options={MODE_OPTIONS} value={mode} onChange={changeMode} />
 
         <div className="top-actions">
           <button
@@ -585,8 +603,8 @@ export default function App() {
               setSettingsOpen(false);
               setExamplesOpen(false);
             }}
-            aria-label="Search a place"
-            title="Search a place (/)"
+            aria-label={t('Search a place')}
+            title={t('Search a place (/)')}
           >
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
               <circle cx="11" cy="11" r="6.5" />
@@ -600,15 +618,46 @@ export default function App() {
               setSettingsOpen(false);
               setSearchOpen(false);
             }}
-            aria-label="Examples"
-            title="Examples"
+            aria-label={t('Examples')}
+            title={t('Examples')}
           >
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
               <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" />
               <circle cx="12" cy="10" r="2.3" />
             </svg>
           </button>
-          <button className="icon-sq" onClick={() => setWelcome(true)} aria-label="What is this?" title="What is this?">
+          <div className="lang-wrap">
+            <button
+              className={`icon-sq ${langOpen ? 'on' : ''}`}
+              onClick={() => {
+                setLangOpen((o) => !o);
+                setSettingsOpen(false);
+                setExamplesOpen(false);
+                setSearchOpen(false);
+              }}
+              aria-label={t('Language')}
+              aria-haspopup="menu"
+              aria-expanded={langOpen}
+              title={t('Language')}
+            >
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9s1.3-6.4 3.9-9z" />
+              </svg>
+              <span className="lang-code">{lang.toUpperCase()}</span>
+            </button>
+            {langOpen && (
+              <div className="lang-menu glass" role="menu">
+                {LANGS.map(([id, label]) => (
+                  <button key={id} role="menuitemradio" aria-checked={lang === id} className={lang === id ? 'on' : ''} onClick={() => changeLang(id)}>
+                    <span>{label}</span>
+                    {lang === id && <span aria-hidden="true">✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <button className="icon-sq" onClick={() => setWelcome(true)} aria-label={t('What is this?')} title={t('What is this?')}>
             <span className="q">?</span>
           </button>
           <button
@@ -618,8 +667,8 @@ export default function App() {
               setExamplesOpen(false);
               setSearchOpen(false);
             }}
-            aria-label="Settings"
-            title="Settings"
+            aria-label={t('Settings')}
+            title={t('Settings')}
           >
             <svg className="gear-ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" />
@@ -631,12 +680,12 @@ export default function App() {
 
       {mode === 'versus' && placeA && placeB && tour == null && (
         <div className="slot-pick glass">
-          Next click replaces:
+          {t('Next click replaces:')}
           <button className={slot === 'A' ? 'on a' : 'a'} onClick={() => setSlot('A')}>
-            PLACE A
+            {t('PLACE A')}
           </button>
           <button className={slot === 'B' ? 'on b' : 'b'} onClick={() => setSlot('B')}>
-            PLACE B
+            {t('PLACE B')}
           </button>
         </div>
       )}
@@ -644,14 +693,14 @@ export default function App() {
         <div className="compare-guide glass" role="status">
           <div className="cg-steps">
             <span className={`cg-step a ${placeA ? 'done' : 'on'}`}>
-              <b>1</b> {placeA ? `${placeA.name} ✓` : 'Place A'}
+              <b>1</b> {placeA ? `${placeA.name} ✓` : t('Place A')}
             </span>
             <span className="cg-arrow">→</span>
             <span className={`cg-step b ${placeA ? 'on' : ''}`}>
-              <b>2</b> Place B
+              <b>2</b> {t('Place B')}
             </span>
           </div>
-          <p>{placeA ? 'Now tap a second place on the globe to compare.' : 'Tap a first place on the globe, then a second one.'}</p>
+          <p>{placeA ? t('Now tap a second place on the globe to compare.') : t('Tap a first place on the globe, then a second one.')}</p>
           {placeA && (
             <button
               className="cg-reset"
@@ -660,7 +709,7 @@ export default function App() {
                 setSlot('A');
               }}
             >
-              Change place A
+              {t('Change place A')}
             </button>
           )}
         </div>
@@ -694,7 +743,7 @@ export default function App() {
             </span>
           )}
           <button className="sheet-toggle" onClick={() => setSheetOpen((o) => !o)} aria-expanded={sheetOpen}>
-            {sheetOpen ? 'Globe ▾' : 'Details ▴'}
+            {sheetOpen ? `${t('Globe')} ▾` : `${t('Details')} ▴`}
           </button>
         </div>
       )}
@@ -708,6 +757,7 @@ export default function App() {
           open={searchOpen}
           onClose={() => setSearchOpen(false)}
           geo={geo}
+          lang={lang}
           cases={data.cases}
           onPick={(lat, lon, name) => {
             setWelcome(false);
@@ -771,12 +821,12 @@ export default function App() {
         >
           <div className="dock-legend">
             <div className="dock-top">
-          <LiquidTabs className="legend-layers" label="Climate layer" options={layerOptions} value={activeLayer} onChange={pickLayer} />
+          <LiquidTabs className="legend-layers" label={t('Climate layer')} options={layerOptions} value={activeLayer} onChange={pickLayer} />
 
             </div>
           <div className="legend-bar" role="img"
-            aria-label={settings.colorMode === 'trend' ? `Trend per year, ${years[0]}–${years[years.length - 1]}` : `${year} vs. ${years[0]}–${years[years.length - 1]} average`}
-            title={settings.colorMode === 'trend' ? `Trend per year, ${years[0]}–${years[years.length - 1]}` : `${year} vs. ${years[0]}–${years[years.length - 1]} average`}
+            aria-label={settings.colorMode === 'trend' ? t('Trend per year, {a}–{b}', { a: years[0], b: years[years.length - 1] }) : t('{y} vs. {a}–{b} average', { y: year, a: years[0], b: years[years.length - 1] })}
+            title={settings.colorMode === 'trend' ? t('Trend per year, {a}–{b}', { a: years[0], b: years[years.length - 1] }) : t('{y} vs. {a}–{b} average', { y: year, a: years[0], b: years[years.length - 1] })}
             style={{ background: legendGradient(activeLayer) }} />
           <div className="legend-labels">
             <span>← {style.negLabel}</span>
@@ -788,8 +838,8 @@ export default function App() {
       )}
 
       {data && !layer && <div className="layer-status glass" role={layerStatus === 'error' ? 'alert' : 'status'}>
-        <span>{layerStatus === 'error' ? `${style.short} is unavailable.` : `Loading ${style.short}…`}</span>
-        {layerStatus === 'error' && <button type="button" onClick={() => retryLayer(activeLayer)}>Retry</button>}
+        <span>{layerStatus === 'error' ? t('{name} is unavailable.', { name: style.short }) : t('Loading {name}…', { name: style.short })}</span>
+        {layerStatus === 'error' && <button type="button" onClick={() => retryLayer(activeLayer)}>{t('Retry')}</button>}
       </div>}
       {data && (
         <SettingsMenu
@@ -807,7 +857,7 @@ export default function App() {
       )}
 
       <footer className="credits">
-        Data: <a href="https://disc.gsfc.nasa.gov" target="_blank" rel="noreferrer">NASA GES DISC</a> (GPM IMERG &amp; MERRA-2) ·{' '}
+        {t('Data:')} <a href="https://disc.gsfc.nasa.gov" target="_blank" rel="noreferrer">NASA GES DISC</a> (GPM IMERG &amp; MERRA-2) ·{' '}
         <a href="https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4" target="_blank" rel="noreferrer">NASA PO.DAAC</a> (GRACE/GRACE-FO) · 2005–2025 · Hamed–Rao Mann–Kendall + FDR
       </footer>
 

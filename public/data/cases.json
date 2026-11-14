@@ -7,49 +7,121 @@
       "title": "Southern Amazon vs. Lake Chad",
       "layer": "precip",
       "tour": true,
-      "a": { "name": "Southern Amazon, Brazil", "lat": -11.50, "lon": -60.50, "expected": "down" },
-      "b": { "name": "Lake Chad basin", "lat": 12.50, "lon": 14.50, "expected": "up" },
-      "summary": "The southern Amazon (Rondônia) gets much less rain than in 2005 (about −58%), while the Lake Chad basin in the Sahel is getting wetter (about +19%)."
+      "a": {
+        "name": "Southern Amazon, Brazil",
+        "lat": -11.5,
+        "lon": -60.5,
+        "expected": "down"
+      },
+      "b": {
+        "name": "Lake Chad basin",
+        "lat": 12.5,
+        "lon": 14.5,
+        "expected": "up"
+      },
+      "summary": "The southern Amazon (Rondônia) gets much less rain than in 2005 (about −58%), while the Lake Chad basin in the Sahel is getting wetter (about +19%).",
+      "title_es": "Sur de la Amazonia vs. lago Chad",
+      "summary_es": "El sur de la Amazonia (Rondônia) recibe mucha menos lluvia que en 2005 (cerca de −58%), mientras la cuenca del lago Chad, en el Sahel, se vuelve más húmeda (cerca de +19%)."
     },
     {
       "id": "punjab-victoria",
       "title": "Punjab vs. Lake Victoria",
       "layer": "water",
-      "a": { "name": "Punjab, India", "lat": 30.90, "lon": 75.85, "expected": "down" },
-      "b": { "name": "Lake Victoria, Uganda", "lat": 0.30, "lon": 32.60, "expected": "up" },
-      "summary": "Groundwater pumping for farming drains northern India (about −79 cm of water since 2005), while Africa's largest lake region gains water (about +111 cm)."
+      "a": {
+        "name": "Punjab, India",
+        "lat": 30.9,
+        "lon": 75.85,
+        "expected": "down"
+      },
+      "b": {
+        "name": "Lake Victoria, Uganda",
+        "lat": 0.3,
+        "lon": 32.6,
+        "expected": "up"
+      },
+      "summary": "Groundwater pumping for farming drains northern India (about −79 cm of water since 2005), while Africa's largest lake region gains water (about +111 cm).",
+      "title_es": "Punyab vs. lago Victoria",
+      "summary_es": "El bombeo de agua subterránea para riego vacía el norte de la India (cerca de −79 cm de agua desde 2005), mientras la región del lago más grande de África gana agua (cerca de +111 cm)."
     },
     {
       "id": "california-murray",
       "title": "California vs. Murray-Darling",
       "layer": "water",
-      "a": { "name": "Central Valley, California", "lat": 36.75, "lon": -119.77, "expected": "down" },
-      "b": { "name": "Murray-Darling Basin, Australia", "lat": -34.50, "lon": 145.50, "expected": "up" },
-      "summary": "Two big farming regions: California's Central Valley keeps losing water (about −32 cm), while Australia's Murray-Darling Basin recovers after its millennium drought (about +13 cm)."
+      "a": {
+        "name": "Central Valley, California",
+        "lat": 36.75,
+        "lon": -119.77,
+        "expected": "down"
+      },
+      "b": {
+        "name": "Murray-Darling Basin, Australia",
+        "lat": -34.5,
+        "lon": 145.5,
+        "expected": "up"
+      },
+      "summary": "Two big farming regions: California's Central Valley keeps losing water (about −32 cm), while Australia's Murray-Darling Basin recovers after its millennium drought (about +13 cm).",
+      "title_es": "California vs. Murray-Darling",
+      "summary_es": "Dos grandes regiones agrícolas: el Valle Central de California sigue perdiendo agua (cerca de −32 cm), mientras la cuenca Murray-Darling de Australia se recupera de su sequía del milenio (cerca de +13 cm)."
     },
     {
       "id": "tehran-sudd",
       "title": "Tehran vs. the Sudd",
       "layer": "water",
-      "a": { "name": "Tehran, Iran", "lat": 35.70, "lon": 51.40, "expected": "down" },
-      "b": { "name": "Sudd wetlands, South Sudan", "lat": 7.50, "lon": 30.50, "expected": "up" },
-      "summary": "Iran's aquifers are being emptied (about −59 cm since 2005), while the Nile's great wetland in South Sudan stores more water (about +24 cm)."
+      "a": {
+        "name": "Tehran, Iran",
+        "lat": 35.7,
+        "lon": 51.4,
+        "expected": "down"
+      },
+      "b": {
+        "name": "Sudd wetlands, South Sudan",
+        "lat": 7.5,
+        "lon": 30.5,
+        "expected": "up"
+      },
+      "summary": "Iran's aquifers are being emptied (about −59 cm since 2005), while the Nile's great wetland in South Sudan stores more water (about +24 cm).",
+      "title_es": "Teherán vs. el Sudd",
+      "summary_es": "Los acuíferos de Irán se están vaciando (cerca de −59 cm desde 2005), mientras el gran humedal del Nilo en Sudán del Sur guarda más agua (cerca de +24 cm)."
     },
     {
       "id": "beijing-odesa",
       "title": "Beijing vs. Odesa",
       "layer": "precip",
-      "a": { "name": "Beijing, China", "lat": 39.90, "lon": 116.40, "expected": "up" },
-      "b": { "name": "Odesa, Ukraine", "lat": 48.50, "lon": 27.50, "expected": "down" },
-      "summary": "Northern China gets more rain than in 2005 (about +48%), while southern Ukraine dries out (about −18%) and loses water reserves."
+      "a": {
+        "name": "Beijing, China",
+        "lat": 39.9,
+        "lon": 116.4,
+        "expected": "up"
+      },
+      "b": {
+        "name": "Odesa, Ukraine",
+        "lat": 48.5,
+        "lon": 27.5,
+        "expected": "down"
+      },
+      "summary": "Northern China gets more rain than in 2005 (about +48%), while southern Ukraine dries out (about −18%) and loses water reserves.",
+      "title_es": "Pekín vs. Odesa",
+      "summary_es": "El norte de China recibe más lluvia que en 2005 (cerca de +48%), mientras el sur de Ucrania se seca (cerca de −18%) y pierde reservas de agua."
     },
     {
       "id": "khartoum-seville",
       "title": "Khartoum vs. Seville",
       "layer": "temp",
-      "a": { "name": "Khartoum, Sudan", "lat": 15.50, "lon": 32.50, "expected": "down" },
-      "b": { "name": "Seville, Spain", "lat": 37.40, "lon": -6.00, "expected": "up" },
-      "summary": "A rare place that cooled: Khartoum is about 1.1 °C cooler as the Sahel got wetter, while southern Spain warmed about 1.7 °C since 2005."
+      "a": {
+        "name": "Khartoum, Sudan",
+        "lat": 15.5,
+        "lon": 32.5,
+        "expected": "down"
+      },
+      "b": {
+        "name": "Seville, Spain",
+        "lat": 37.4,
+        "lon": -6.0,
+        "expected": "up"
+      },
+      "summary": "A rare place that cooled: Khartoum is about 1.1 °C cooler as the Sahel got wetter, while southern Spain warmed about 1.7 °C since 2005.",
+      "title_es": "Jartum vs. Sevilla",
+      "summary_es": "Un caso raro que se enfrió: Jartum está cerca de 1,1 °C más fresca a medida que el Sahel se humedeció, mientras el sur de España se calentó cerca de 1,7 °C desde 2005."
     }
   ]
 }

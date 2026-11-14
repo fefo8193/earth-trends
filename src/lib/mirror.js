@@ -1,6 +1,7 @@
 // Motor del "Modo Opuesto" y diagnóstico automático en una línea.
 import { cellCenter } from './data.js';
 import { greatCircleKm } from './stats.js';
+import { t } from './i18n.js';
 
 /**
  * Busca la región terrestre con la tendencia Mann-Kendall más fuerte y de signo contrario a A.
@@ -49,20 +50,38 @@ export function diagnose(byLayer, mainId) {
     if (!d || !d.sig) return 0;
     return d.tau > 0 ? 1 : -1;
   };
+  // Señales posibles: tendencia no significativa pero con dirección (|tau| >= 0.1)
+  const weakDir = (id) => {
+    const d = byLayer[id];
+    if (!d || d.sig || !Number.isFinite(d.tau) || Math.abs(d.tau) < 0.1) return 0;
+    return d.tau > 0 ? 1 : -1;
+  };
+  const join = (parts) =>
+    parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} ${t('and')} ${parts[parts.length - 1]}`;
   const P = dir('precip');
   const W = dir('water');
   const main = byLayer[mainId];
-  const since = main?.sig && main.pettitt && main.pettitt.p < 0.05 ? ` since ${main.pettitt.year}` : '';
-  if (P < 0 && W < 0) return `Long-term drying: less rain and shrinking water reserves${since}.`;
-  if (P > 0 && W > 0) return `Getting wetter: more rain and growing water reserves${since}.`;
+  const since = main?.sig && main.pettitt && main.pettitt.p < 0.05 ? ` ${t('since')} ${main.pettitt.year}` : '';
+  if (P < 0 && W < 0) return `${t('Long-term drying: less rain and shrinking water reserves')}${since}.`;
+  if (P > 0 && W > 0) return `${t('Getting wetter: more rain and growing water reserves')}${since}.`;
   const parts = [];
   for (const id of [mainId, 'precip', 'temp', 'water', 'stars']) {
     const s = dir(id);
     if (!s) continue;
-    const ph = PHRASES[id][s > 0 ? 'up' : 'down'];
+    const ph = t(PHRASES[id][s > 0 ? 'up' : 'down']);
     if (!parts.includes(ph)) parts.push(ph);
   }
-  if (!parts.length) return 'No statistically significant trend detected for this period.';
-  const txt = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+  if (!parts.length) {
+    const weak = [];
+    for (const id of [mainId, 'precip', 'temp', 'water', 'stars']) {
+      const s = weakDir(id);
+      if (!s) continue;
+      const ph = t(PHRASES[id][s > 0 ? 'up' : 'down']);
+      if (!weak.includes(ph)) weak.push(ph);
+    }
+    if (!weak.length) return t('No clear trend in this period: the changes look like natural year-to-year variation.');
+    return t('Possible signs, not confirmed yet: {list}. A longer record may confirm them.', { list: join(weak) });
+  }
+  const txt = join(parts);
   return `${txt.charAt(0).toUpperCase()}${txt.slice(1)}${since}.`;
 }

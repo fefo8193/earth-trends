@@ -1,54 +1,116 @@
+import { t } from './i18n.js';
+
 // Paletas climáticas divergentes (centro transparente) y colores de acento por capa.
 const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 
 export const LAYER_STYLE = {
   precip: {
-    short: 'Rainfall',
-    name: 'Rainfall',
-    units: 'mm/yr',
-    noun: 'rainfall',
+    get short() {
+      return t('Rainfall');
+    },
+    get name() {
+      return t('Rainfall');
+    },
+    get units() {
+      return t('mm/yr');
+    },
+    get noun() {
+      return t('rainfall');
+    },
     accent: '#3ec5ff',
     chart: 'bars',
     neg: [hex('#ffc070'), hex('#d9461b')], // más seco
     pos: [hex('#6fdcff'), hex('#2a62ff')], // más húmedo
-    negLabel: 'drier',
-    posLabel: 'wetter',
+    get negLabel() {
+      return t('drier');
+    },
+    get posLabel() {
+      return t('wetter');
+    },
+    get about() {
+      return t("How much rain and snow fell during the year, measured from space by NASA's GPM satellites (IMERG). One millimetre means a 1 mm layer of water over flat ground.");
+    },
   },
   temp: {
-    short: 'Temperature',
-    name: 'Temperature',
-    units: '°C',
-    noun: 'temperature',
+    get short() {
+      return t('Temperature');
+    },
+    get name() {
+      return t('Temperature');
+    },
+    get units() {
+      return t('°C');
+    },
+    get noun() {
+      return t('temperature');
+    },
     accent: '#ffb547',
     chart: 'area',
     neg: [hex('#b8f3ff'), hex('#22d3ee')],
     pos: [hex('#ffc46b'), hex('#ff3a2a')],
-    negLabel: 'colder',
-    posLabel: 'warmer',
+    get negLabel() {
+      return t('colder');
+    },
+    get posLabel() {
+      return t('warmer');
+    },
+    get about() {
+      return t("Average air temperature 2 metres above the ground, from NASA's MERRA-2 reanalysis: a model that blends satellite, weather-station and balloon observations into one complete map.");
+    },
   },
   water: {
-    short: 'Water',
-    name: 'Water storage (GRACE)',
-    units: 'cm',
-    noun: 'water storage',
+    get short() {
+      return t('Water');
+    },
+    get name() {
+      return t('Water storage (GRACE)');
+    },
+    get units() {
+      return t('cm');
+    },
+    get noun() {
+      return t('water storage');
+    },
     accent: '#a9c8ff',
     chart: 'area',
     neg: [hex('#ffd27a'), hex('#d97a1c')],
     pos: [hex('#7ff5e6'), hex('#169fd6')],
-    negLabel: 'less water',
-    posLabel: 'more water',
+    get negLabel() {
+      return t('less water');
+    },
+    get posLabel() {
+      return t('more water');
+    },
+    get about() {
+      return t("All the water stored on and under the land (lakes, rivers, soil moisture, groundwater, snow and ice). The twin GRACE and GRACE-FO satellites weigh it from space through tiny changes in Earth's gravity. Shown in centimetres of water compared with the 2004–2009 average.");
+    },
   },
   stars: {
-    short: 'Stars',
-    name: 'Star visibility',
-    units: '% clear sky',
-    noun: 'clear-sky time',
+    get short() {
+      return t('Stars');
+    },
+    get name() {
+      return t('Star visibility');
+    },
+    get units() {
+      return t('% clear sky');
+    },
+    get noun() {
+      return t('clear-sky time');
+    },
     accent: '#c6b3ff',
     chart: 'area',
     neg: [hex('#d9b8ff'), hex('#8a4fe0')], // más nublado
     pos: [hex('#fff3b0'), hex('#ffcf3a')], // más despejado
-    negLabel: 'cloudier',
-    posLabel: 'clearer skies',
+    get negLabel() {
+      return t('cloudier');
+    },
+    get posLabel() {
+      return t('clearer skies');
+    },
+    get about() {
+      return t("The share of time the sky is free of clouds, from MERRA-2 total cloud cover. Together with NASA's Earth at Night image (light pollution), it tells you how good a place is for stargazing.");
+    },
   },
 };
 
