@@ -10,3 +10,4 @@ raw-data/*
 docs/*.pdf
 .claude/
 *.tmp
+demo-video/

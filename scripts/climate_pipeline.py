@@ -3,7 +3,7 @@
 EarthTrends · Pipeline de datos NASA -> JSON para la web.
 
 Lee todos los .nc / .nc4 de /raw-data (recursivo), detecta la variable de
-cada archivo (Precipitación GPM / Temperatura MERRA-2 / Agua SWOT-GRACE),
+cada archivo (Precipitación GPM / Temperatura MERRA-2 / Agua GRACE/GRACE-FO),
 une automáticamente los tramos de años divididos en varios archivos,
 promedia a una grilla global común, agrega a series anuales 2005-2025,
 corre el test de Mann-Kendall (pymannkendall) celda por celda y exporta
@@ -822,8 +822,7 @@ def main():
             continue
         valid_years = int(np.isfinite(annual).any(axis=1).sum())
         if valid_years < args.min_years:
-            log(f"[{layer}] ⚠ solo {valid_years} años con datos (< {args.min_years}); MK no será significativo. "
-                "SWOT empezó en 2023: para 20 años de agua usá GRACE/GRACE-FO o Hydroweb.")
+            log(f"[{layer}] ⚠ solo {valid_years} años con datos (< {args.min_years}); MK no será significativo.")
         log(f"[{layer}] Mann-Kendall ({args.test}) en {grid.nlat * grid.nlon} celdas…")
         mkres = mann_kendall_grid(annual, years, args.test, args.alpha, args.min_years)
         if not args.no_fdr:
